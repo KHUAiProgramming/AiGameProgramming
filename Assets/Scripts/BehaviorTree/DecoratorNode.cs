@@ -1,7 +1,5 @@
 
 using UnityEngine;
-using System.Collections.Generic;
-using UnityEditor.UI;
 
 
 namespace BehaviorTree
@@ -11,7 +9,7 @@ namespace BehaviorTree
         private int repeatCount;
         private int currentCount = 0;
 
-        public Repeat(int repeatCount = -1) // -1은 무한 반복
+        public Repeat(int repeatCount = -1) // -1 -> infinite
         {
             this.repeatCount = repeatCount;
         }
@@ -65,7 +63,7 @@ namespace BehaviorTree
         }
     }
 
-    public class InverterNode : DecoratorNode
+    public class Inverter : DecoratorNode
     {
         public override NodeState Evaluate()
         {
@@ -95,12 +93,12 @@ namespace BehaviorTree
     }
 
 
-    public class RetryNode : DecoratorNode
+    public class Retry : DecoratorNode
     {
         private int maxRetries;
         private int currentRetries = 0;
 
-        public RetryNode(int maxRetries)
+        public Retry(int maxRetries)
         {
             this.maxRetries = maxRetries;
         }
@@ -152,7 +150,7 @@ namespace BehaviorTree
         }
     }
 
-    public class ForceSuccessNode : DecoratorNode
+    public class ForceSuccess : DecoratorNode
     {
         public override NodeState Evaluate()
         {
@@ -178,7 +176,7 @@ namespace BehaviorTree
     }
 
 
-    public class ForceFailureNode : DecoratorNode
+    public class ForceFailure : DecoratorNode
     {
         public override NodeState Evaluate()
         {
@@ -204,13 +202,13 @@ namespace BehaviorTree
     }
 
 
-    public class TimeoutNode : DecoratorNode
+    public class Timeout : DecoratorNode
     {
         private float timeout;
         private float startTime;
         private bool isRunning = false;
 
-        public TimeoutNode(float timeout)
+        public Timeout(float timeout)
         {
             this.timeout = timeout;
         }
@@ -256,13 +254,13 @@ namespace BehaviorTree
         }
     }
 
-    public class DelayNode : DecoratorNode
+    public class Delay : DecoratorNode
     {
         private float delay;
         private float startTime;
         private bool complete = false;
 
-        public DelayNode(float delay)
+        public Delay(float delay)
         {
             this.delay = delay;
         }
@@ -307,7 +305,7 @@ namespace BehaviorTree
         }
     }
 
-    public class UntilSuccessNode : DecoratorNode
+    public class UntilSuccess : DecoratorNode
     {
         public override NodeState Evaluate()
         {
@@ -340,7 +338,7 @@ namespace BehaviorTree
         }
     }
 
-    public class UntilFailureNode : DecoratorNode
+    public class UntilFailure : DecoratorNode
     {
         public override NodeState Evaluate()
         {
