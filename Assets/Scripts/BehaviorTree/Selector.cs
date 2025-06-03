@@ -6,36 +6,28 @@ namespace BehaviorTree
 {
     public class SelectorNode : CompositeNode
     {
-        private int currentChildIndex = 0;
-
+        public SelectorNode() : base() { }
+        public SelectorNode(List<Node> children) : base(children) { }
         public override NodeState Evaluate()
         {
-            for (int i = currentChildIndex; i < children.Count; i++)
-            {
-                var childState = children[i].Evaluate();
 
-                switch (childState)
+            foreach (Node child in children)
+            {
+                switch (child.Evaluate())
                 {
                     case NodeState.Running:
-                        currentChildIndex = i;
                         state = NodeState.Running;
                         return state;
 
                     case NodeState.Success:
-                        ResetAllChildren();
-                        currentChildIndex = 0;
                         state = NodeState.Success;
                         return state;
 
                     case NodeState.Failure:
-                        children[i].Reset();
-                        continue; // 다음 자식 노드 시도
+                        continue;
                 }
             }
-
-            // 모든 자식 노드 실패
-            ResetAllChildren();
-            currentChildIndex = 0;
+            Reset();
             state = NodeState.Failure;
             return state;
         }
@@ -43,15 +35,6 @@ namespace BehaviorTree
         public override void Reset()
         {
             base.Reset();
-            currentChildIndex = 0;
-        }
-
-        private void ResetAllChildren()
-        {
-            foreach (Node child in children)
-            {
-                child.Reset();
-            }
         }
     }
 

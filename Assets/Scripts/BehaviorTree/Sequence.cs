@@ -5,24 +5,19 @@ namespace BehaviorTree
 {
     public class SequenceNode : CompositeNode
     {
-        private int currentChildIndex = 0;
-
+        public SequenceNode() : base() { }
+        public SequenceNode(List<Node> children) : base(children) { }
         public override NodeState Evaluate()
         {
-            for (int i = currentChildIndex; i < children.Count; i++)
+            foreach (Node child in children)
             {
-                NodeState childState = children[i].Evaluate();
-
-                switch (childState)
+                switch (child.Evaluate())
                 {
                     case NodeState.Running:
-                        currentChildIndex = i;
                         state = NodeState.Running;
                         return state;
 
                     case NodeState.Failure:
-                        ResetAllChildren();
-                        currentChildIndex = 0;
                         state = NodeState.Failure;
                         return state;
 
@@ -31,9 +26,7 @@ namespace BehaviorTree
                 }
             }
 
-            // 모든 자식 노드 성공한 경우
-            ResetAllChildren();
-            currentChildIndex = 0;
+            Reset();
             state = NodeState.Success;
             return state;
         }
@@ -41,17 +34,7 @@ namespace BehaviorTree
         public override void Reset()
         {
             base.Reset();
-            currentChildIndex = 0;
-        }
-
-        private void ResetAllChildren()
-        {
-            foreach (Node child in children)
-            {
-                child.Reset();
-            }
         }
     }
-
 }
 

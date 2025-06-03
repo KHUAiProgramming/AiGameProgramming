@@ -45,12 +45,17 @@ namespace BehaviorTree
             ConstructTree();
         }
 
-        void Update()
+        public virtual void Update()
         {
             if (root != null)
             {
                 root.Evaluate();
             }
+
+            OnUpdate();
+        }
+        protected virtual void OnUpdate()
+        {
         }
 
         protected virtual void ConstructTree() { }

@@ -21,13 +21,23 @@ namespace BehaviorTree
 
         public virtual void Reset()
         {
-            state = NodeState.Failure;
+            state = NodeState.Running;
         }
     }
 
     public abstract class CompositeNode : Node
     {
         protected List<Node> children = new List<Node>();
+
+        public CompositeNode()
+        {
+
+        }
+        public CompositeNode(List<Node> children)
+        {
+            this.children = children;
+        }
+
 
         public void AddChild(Node child)
         {
@@ -41,11 +51,11 @@ namespace BehaviorTree
 
         public override void Reset()
         {
-            base.Reset();
             foreach (Node child in children)
             {
                 child.Reset();
             }
+            base.Reset();
         }
     }
 
@@ -87,8 +97,8 @@ namespace BehaviorTree
 
         public override void Reset()
         {
-            base.Reset();
             child?.Reset();
+            base.Reset();
         }
     }
 }

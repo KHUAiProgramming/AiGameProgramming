@@ -6,12 +6,12 @@ using UnityEditor.UI;
 
 namespace BehaviorTree
 {
-    public class RepeaterNode : DecoratorNode
+    public class Repeat : DecoratorNode
     {
         private int repeatCount;
         private int currentCount = 0;
 
-        public RepeaterNode(int repeatCount = -1) // -1은 무한 반복
+        public Repeat(int repeatCount = -1) // -1은 무한 반복
         {
             this.repeatCount = repeatCount;
         }
@@ -24,24 +24,35 @@ namespace BehaviorTree
                 return state;
             }
 
-            NodeState childState = child.Evaluate();
-
-            if (childState == NodeState.Running)
+            if (repeatCount != -1 && currentCount >= repeatCount)
             {
-                state = NodeState.Running;
+                state = NodeState.Success;
                 return state;
             }
 
-            currentCount++;
-
-            if (repeatCount > 0 && currentCount >= repeatCount) // 반복 완료
+            switch (child.Evaluate())
             {
-                currentCount = 0;
-                state = childState; // 마지막 결과
-                return state;
+                case NodeState.Success:
+                    child.Reset();
+                    currentCount++;
+
+                    if (currentCount >= repeatCount)
+                    {
+                        state = NodeState.Success;
+                        return state;
+                    }
+                    break;
+
+                case NodeState.Failure:
+                    child.Reset();
+                    state = NodeState.Failure;
+                    return state;
+
+                case NodeState.Running:
+                    state = NodeState.Running;
+                    return state;
             }
 
-            // 자식 리셋하고 계속 반복
             child.Reset();
             state = NodeState.Running;
             return state;
@@ -64,14 +75,14 @@ namespace BehaviorTree
                 return state;
             }
 
-            NodeState childState = child.Evaluate();
-
-            switch (childState)
+            switch (child.Evaluate())
             {
                 case NodeState.Success:
+                    child.Reset();
                     state = NodeState.Failure;
                     break;
                 case NodeState.Failure:
+                    child.Reset();
                     state = NodeState.Success;
                     break;
                 case NodeState.Running:
@@ -102,9 +113,7 @@ namespace BehaviorTree
                 return state;
             }
 
-            NodeState childState = child.Evaluate();
-
-            switch (childState)
+            switch (child.Evaluate())
             {
                 case NodeState.Success:
                     currentRetries = 0;
