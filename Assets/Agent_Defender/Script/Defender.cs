@@ -11,14 +11,27 @@ public class Defender : MonoBehaviour
     bool isWalkclicked;
     bool isJumpclicked;
     bool isDodgeClicked;
+    bool isSlashclicked;
+    bool isShieldClicked;
+
     bool isJump;
     bool isDodge;
+
+    bool isSlashReady;
+    bool isShieldReady;
     Vector3 moveVec;
     Rigidbody rb;
     Animator anim;
 
     public float dodgeCoolTime = 5f;
     private float dodgeCurrentCooldown = 0f;
+
+    float slashDelay = 0f;
+    public float slashCooldown = 2.5f;
+    private float slashCurrentCooldown = 0f;
+
+    public float shieldCooldown = 2.5f;
+    private float shieldCurrentCooldown = 0f;
 
     void Start()
     {
@@ -33,11 +46,31 @@ public class Defender : MonoBehaviour
         Move();
         Turn();
         Jump();
+        Attack();
         Dodge();
+        Shield();
 
         if (dodgeCoolTime > 0f)
         {
             dodgeCurrentCooldown -= Time.deltaTime;
+        }
+
+        if (slashCurrentCooldown > 0f)
+        {
+            slashCurrentCooldown -= Time.deltaTime;
+        }
+        else
+        {
+            isSlashReady = true;
+        }
+
+        if (shieldCurrentCooldown > 0f)
+        {
+            shieldCurrentCooldown -= Time.deltaTime;
+        }
+        else
+        {
+            isShieldReady = true;
         }
 
     }
@@ -49,6 +82,8 @@ public class Defender : MonoBehaviour
         isWalkclicked = Input.GetButton("Walk");
         isJumpclicked = Input.GetButtonDown("Jump");
         isDodgeClicked = Input.GetButtonDown("Dodge");
+        isSlashclicked = Input.GetButtonDown("Slash");
+        isShieldClicked = Input.GetButtonDown("Shield");
     }
 
     void Move()
@@ -104,6 +139,41 @@ public class Defender : MonoBehaviour
         speed *= 0.5f;
         isDodge = false;
     }
+
+    void Attack()
+    {
+        slashDelay += Time.deltaTime;
+        if (isSlashclicked && isSlashReady && !isDodge)
+        {
+            anim.SetTrigger("DoSwing");
+            slashCurrentCooldown = slashCooldown;
+            isSlashReady = false;
+
+            Invoke("ResetSlashReady", slashCooldown);
+        }
+    }
+    void ResetSlashReady()
+    {
+        isSlashReady = true;
+    }
+
+    void Shield()
+    {
+        if (isShieldClicked && isShieldReady && !isDodge)
+        {
+            anim.SetTrigger("DoShield");
+            shieldCurrentCooldown = shieldCooldown;
+            isShieldReady = false;
+
+            Invoke("ResetShieldReady", shieldCooldown);
+        }
+    }
+
+    void ResetShieldReady()
+    {
+        isShieldReady = true;
+    }
+
 
     void OnCollisionEnter(Collision collision)
     {
