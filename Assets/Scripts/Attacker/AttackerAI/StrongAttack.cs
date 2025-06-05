@@ -1,8 +1,11 @@
 using UnityEngine;
 using BehaviorTree;
 using System;
+
 public class StrongAttack : ActionNode
 {
+    private bool attackStarted = false;
+
     public StrongAttack(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard)
     {
     }
@@ -17,14 +20,30 @@ public class StrongAttack : ActionNode
             return state;
         }
 
-        if (controller.CanAttack())
+        if (!attackStarted)
         {
-            controller.Attack();
-            state = NodeState.Success;
+            if (controller.CanAttack())
+            {
+                controller.Attack();
+                attackStarted = true;
+                state = NodeState.Running;
+            }
+            else
+            {
+                state = NodeState.Failure;
+            }
         }
         else
         {
-            state = NodeState.Running;
+            if (controller.IsAttacking())
+            {
+                state = NodeState.Running;
+            }
+            else
+            {
+                attackStarted = false;
+                state = NodeState.Success;
+            }
         }
 
         return state;
@@ -32,6 +51,7 @@ public class StrongAttack : ActionNode
 
     public override void Reset()
     {
+        attackStarted = false;
         base.Reset();
     }
 }

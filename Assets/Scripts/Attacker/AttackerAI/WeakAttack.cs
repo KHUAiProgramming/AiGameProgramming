@@ -17,15 +17,15 @@ public class WeakAttack : ActionNode
             return state;
         }
 
-        if (controller.CanWeakAttack())
-        {
-            controller.CanWeakAttack();
-            state = NodeState.Success;
-        }
-        else
-        {
+        // if (controller.CanWeakAttack())
+        // {
+        //     controller.CanWeakAttack();
+        //     state = NodeState.Success;
+        // }
+        // else
+        // {
             state = NodeState.Running;
-        }
+        // }
 
         return state;
     }
