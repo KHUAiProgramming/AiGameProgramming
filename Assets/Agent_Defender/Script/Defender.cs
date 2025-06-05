@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Defender : MonoBehaviour
 {
+    public float MaxHP = 100.0f;
+    public float CurrentHP;
+
     public float speed;
     // Start is called before the first frame update
     float hAxis;
@@ -17,6 +20,7 @@ public class Defender : MonoBehaviour
     void Start()
     {
         anim = GetComponentInChildren<Animator>();
+        CurrentHP = MaxHP;
     }
 
     // Update is called once per frame
@@ -39,5 +43,15 @@ public class Defender : MonoBehaviour
         anim.SetBool("IsWalk", wDown);
 
         transform.LookAt(transform.position + moveVec);
+    }
+
+    public void GetDamage(float damage)
+    {
+        CurrentHP -= damage;
+
+        if (CurrentHP <= 0)
+        {
+            // 게임 끝
+        }
     }
 }
