@@ -35,8 +35,9 @@ public class AttackerAI : BehaviorTree.BehaviorTree
 
     protected override void ConstructTree()
     {
-        SelectorNode rootSelector = new SelectorNode(
-            new StrongAttack(this, blackboard)
+        SequenceNode rootSelector = new SequenceNode(
+            new MoveToTarget(this, blackboard),
+            new WeakAttack(this, blackboard)
         );
 
         // SequenceNode sequenceNode = new SequenceNode();
