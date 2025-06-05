@@ -6,6 +6,7 @@ namespace BehaviorTree
     public class SelectorNode : CompositeNode
     {
         public SelectorNode() : base() { }
+        public SelectorNode(params Node[] children) : base(children) { }
         public SelectorNode(List<Node> children) : base(children) { }
         public override NodeState Evaluate()
         {
