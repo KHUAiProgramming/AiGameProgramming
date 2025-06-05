@@ -26,6 +26,7 @@ public class Defender : MonoBehaviour
     Rigidbody rb;
     Animator anim;
 
+
     public float dodgeCoolTime = 5f;
     private float dodgeCurrentCooldown = 0f;
 
@@ -35,6 +36,7 @@ public class Defender : MonoBehaviour
 
     public float shieldCooldown = 2.5f;
     private float shieldCurrentCooldown = 0f;
+    
 
     void Start()
     {
@@ -77,6 +79,10 @@ public class Defender : MonoBehaviour
             isShieldReady = true;
         }
 
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Slash"))
+        {
+            
+        }
     }
 
     void GetInput()
