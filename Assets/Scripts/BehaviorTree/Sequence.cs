@@ -5,6 +5,7 @@ namespace BehaviorTree
     public class SequenceNode : CompositeNode
     {
         public SequenceNode() : base() { }
+        public SequenceNode(params Node[] children) : base(children) { }
         public SequenceNode(List<Node> children) : base(children) { }
         public override NodeState Evaluate()
         {

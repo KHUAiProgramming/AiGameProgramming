@@ -33,6 +33,12 @@ namespace BehaviorTree
         {
 
         }
+
+        public CompositeNode(params Node[] children)
+        {
+            this.children = new List<Node>(children);
+        }
+
         public CompositeNode(List<Node> children)
         {
             this.children = children;
