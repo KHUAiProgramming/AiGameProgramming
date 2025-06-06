@@ -37,7 +37,7 @@ public class AttackerAI : BehaviorTree.BehaviorTree
     {
         SequenceNode rootSelector = new SequenceNode(
             new MoveToTarget(this, blackboard),
-            new WeakAttack(this, blackboard)
+            new StrongAttack(this, blackboard)
         );
 
         // SequenceNode sequenceNode = new SequenceNode();
