@@ -1,37 +1,37 @@
 using UnityEngine;
 using BehaviorTree;
 
-public class IsOutOfRange : ConditionNode
+public class IsCloseRange : ConditionNode
 {
-    private float maxRange;
-
-    public IsOutOfRange(MonoBehaviour owner, Blackboard blackboard, float range = 5f)
-        : base(owner, blackboard)
+    private float closeRange;
+    
+    public IsCloseRange(MonoBehaviour owner, Blackboard blackboard, float range = 3f) 
+        : base(owner, blackboard) 
     {
-        maxRange = range;
+        closeRange = range;
     }
 
     public override NodeState Evaluate()
     {
         AttackerController controller = blackboard.GetValue<AttackerController>("controller");
         Transform target = blackboard.GetValue<Transform>("target");
-
+        
         if (controller == null || target == null)
         {
             state = NodeState.Failure;
             return state;
         }
-
+        
         float distance = Vector3.Distance(controller.transform.position, target.position);
-        bool isOutOfRange = distance > maxRange;
-
-        state = isOutOfRange ? NodeState.Success : NodeState.Failure;
-
-        if (isOutOfRange)
+        bool isClose = distance <= closeRange;
+        
+        state = isClose ? NodeState.Success : NodeState.Failure;
+        
+        if (isClose)
         {
-            Debug.Log($"IsOutOfRange: Target is out of range ({distance:F1}m > {maxRange}m)");
+            Debug.Log($"IsCloseRange: Target is close ({distance:F1}m <= {closeRange}m)");
         }
-
+        
         return state;
     }
 }
