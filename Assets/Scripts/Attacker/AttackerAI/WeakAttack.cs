@@ -9,7 +9,6 @@ public class WeakAttack : ActionNode
     public WeakAttack(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard)
     {
     }
-
     public override NodeState Evaluate()
     {
         AttackerController controller = blackboard.GetValue<AttackerController>("controller");
@@ -35,7 +34,7 @@ public class WeakAttack : ActionNode
         }
         else
         {
-            if (controller.IsAttacking())
+            if (controller.IsAttacking)
             {
                 state = NodeState.Running;
             }

@@ -14,7 +14,7 @@ public class MoveToTarget : ActionNode
         Rigidbody rb = self.GetComponent<Rigidbody>();
         float speed = blackboard.GetValue<float>("moveSpeed");
 
-        Vector3 direction = (enemy.position - self.transform.position).normalized;
+        Vector3 toTarget = enemy.position - self.transform.position;
         float distance = Vector3.Distance(self.transform.position, enemy.position);
 
         if (distance <= 1f)
@@ -23,10 +23,11 @@ public class MoveToTarget : ActionNode
             rb.velocity = new Vector3(0, rb.velocity.y, 0);
             return NodeState.Success;
         }
+        // 4방향 제한: 앞, 뒤, 좌, 우만 허용
+        Vector3 direction = toTarget.normalized;
+        controller.Move(direction);
 
         rb.velocity = new Vector3(direction.x * speed, rb.velocity.y, direction.z * speed);
-
-        controller.Move(direction);
 
         return NodeState.Running;
     }

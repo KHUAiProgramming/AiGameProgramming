@@ -24,7 +24,7 @@ public class StrongAttack : ActionNode
         {
             if (controller.CanAttack())
             {
-                controller.Attack();
+                controller.Attack(); // 강공격은 Attack() 메서드 사용
                 attackStarted = true;
                 state = NodeState.Running;
             }
@@ -35,7 +35,7 @@ public class StrongAttack : ActionNode
         }
         else
         {
-            if (controller.IsAttacking())
+            if (controller.IsAttacking)
             {
                 state = NodeState.Running;
             }
