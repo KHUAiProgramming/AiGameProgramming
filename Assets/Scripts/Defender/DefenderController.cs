@@ -20,8 +20,8 @@ public class DefenderController : MonoBehaviour
         Dodging
     }
 
-    [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 1.8f;
+    [Header("Defender Stats - 방어형 특화")]
+    [SerializeField] private float moveSpeed = 3.5f; // 공격형보다 느림
 
     [Header("Combat Timing")]
     [Range(0f, 100f)][SerializeField] private float commitPoint = 25f;
@@ -33,18 +33,18 @@ public class DefenderController : MonoBehaviour
     [SerializeField] private float blockSpeed = 1.0f;
     [SerializeField] private float dodgeSpeed = 1.0f;
 
-    [Header("Cooldown Settings")]
-    [SerializeField] private float attackCooldown = 3.5f;
-    [SerializeField] private float blockCooldown = 2.5f;
-    [SerializeField] private float dodgeCooldown = 4.0f;
+    [Header("Cooldown Settings - 원래값 유지")]
+    [SerializeField] private float attackCooldown = 3.5f; // 원래대로
+    [SerializeField] private float blockCooldown = 2.5f; // 원래대로
+    [SerializeField] private float dodgeCooldown = 4.0f; // 원래대로
 
-    [Header("Duration Settings")]
+    [Header("Duration Settings - 원래값 유지")]
     [SerializeField] private float attackDuration = 1.2f;
-    [SerializeField] private float blockDuration = 1.5f;
+    [SerializeField] private float blockDuration = 1.5f; // 원래대로
     [SerializeField] private float dodgeDuration = 0.8f;
 
-    [Header("Status")]
-    [SerializeField] private float maxHP = 100f;
+    [Header("Status - 원래값 유지")]
+    [SerializeField] private float maxHP = 100f; // 원래대로
     [SerializeField] private float currentHP = 100f;
 
     // Components
@@ -298,7 +298,7 @@ public class DefenderController : MonoBehaviour
         }
 
         Stop();
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1.5f); // 원래대로
 
         lastBlockTime = Time.time;
         isBlocking = false;

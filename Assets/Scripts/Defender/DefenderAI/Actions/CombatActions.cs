@@ -300,15 +300,15 @@ namespace DefenderAI
 
             float distance = Vector3.Distance(owner.transform.position, target.position);
 
-            // 적절한 거리(3-4미터) 유지
-            if (distance < 3.0f)
+            // 데드존 사용: 2.8~4.2미터 사이에서는 움직이지 않음
+            if (distance < 2.8f)
             {
                 // 너무 가까우면 뒤로 살짝 이동
                 Vector3 awayDirection = (owner.transform.position - target.position).normalized;
                 controller.Move(awayDirection);
                 return NodeState.Running;
             }
-            else if (distance > 4.0f)
+            else if (distance > 4.2f)
             {
                 // 너무 멀면 살짝 접근 (하지만 조심스럽게)
                 Vector3 towardDirection = (target.position - owner.transform.position).normalized;
@@ -317,7 +317,7 @@ namespace DefenderAI
             }
             else
             {
-                // 적절한 거리에서 대기/경계
+                // 2.8~4.2미터 = 안전구간, 움직이지 않음
                 controller.Stop();
                 return NodeState.Success;
             }
@@ -327,6 +327,8 @@ namespace DefenderAI
     // 넓은 공간으로 이동 (가장자리 회피)
     public class MoveToOpenSpace : ActionNode
     {
+        private bool isMoving = false;
+
         public MoveToOpenSpace(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
 
         public override NodeState Evaluate()
@@ -351,17 +353,33 @@ namespace DefenderAI
 
             if (distanceFromCenter > mapRadius) // 가장자리에 너무 가까움
             {
-                // 맵 중앙 방향으로 이동
+                // 맵 중앙 방향으로 이동 시작/계속
                 Vector3 toCenterDirection = (mapCenter - currentPos).normalized;
                 Vector3 moveDirection = GetClosest4Direction(toCenterDirection);
                 controller.Move(moveDirection);
-                return NodeState.Running;
+                isMoving = true;
+                return NodeState.Running; // 이동 중이므로 Running
             }
             else
             {
-                // 충분히 넓은 공간에 있음
-                return NodeState.Success;
+                // 안전한 위치에 도달
+                if (isMoving)
+                {
+                    controller.Stop();
+                    isMoving = false;
+                    return NodeState.Success; // 목표 달성으로 Success
+                }
+                else
+                {
+                    return NodeState.Failure; // 이미 안전한 위치에 있으므로 이 노드는 실행할 필요 없음
+                }
             }
+        }
+
+        public override void Reset()
+        {
+            isMoving = false;
+            base.Reset();
         }
 
         private Vector3 GetClosest4Direction(Vector3 direction)

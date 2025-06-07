@@ -125,4 +125,85 @@ namespace AttackerAI
             return state;
         }
     }
+
+    // 상대방이 방어 중일 때 체크
+    public class IsTargetBlocking : ConditionNode
+    {
+        public IsTargetBlocking(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (target == null)
+            {
+                state = NodeState.Failure;
+                return state;
+            }
+
+            DefenderController defenderController = target.GetComponent<DefenderController>();
+            if (defenderController != null && defenderController.IsBlocking)
+            {
+                state = NodeState.Success;
+                return state;
+            }
+
+            state = NodeState.Failure;
+            return state;
+        }
+    }
+
+    // 상대방이 공격 중일 때 체크
+    public class IsTargetAttacking : ConditionNode
+    {
+        public IsTargetAttacking(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (target == null)
+            {
+                state = NodeState.Failure;
+                return state;
+            }
+
+            DefenderController defenderController = target.GetComponent<DefenderController>();
+            if (defenderController != null && defenderController.IsAttacking)
+            {
+                state = NodeState.Success;
+                return state;
+            }
+
+            state = NodeState.Failure;
+            return state;
+        }
+    }
+
+    // 타겟과 멀리 떨어져 있는지 체크
+    public class IsFarFromTarget : ConditionNode
+    {
+        private float distance;
+
+        public IsFarFromTarget(MonoBehaviour owner, Blackboard blackboard, float distance) : base(owner, blackboard)
+        {
+            this.distance = distance;
+        }
+
+        public override NodeState Evaluate()
+        {
+            MonoBehaviour self = blackboard.GetValue<MonoBehaviour>("self");
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (self == null || target == null)
+            {
+                state = NodeState.Failure;
+                return state;
+            }
+
+            float currentDistance = Vector3.Distance(self.transform.position, target.position);
+            state = currentDistance > distance ? NodeState.Success : NodeState.Failure;
+            return state;
+        }
+    }
 }

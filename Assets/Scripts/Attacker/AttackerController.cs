@@ -20,19 +20,19 @@ public class AttackerController : MonoBehaviour
         Blocking,
         Dodging
     }
-    [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 2.0f;
+    [Header("Attacker Stats - 공격형 특화")]
+    [SerializeField] private float moveSpeed = 4.5f; // 방어형보다 빠름
 
     [Header("Combat Timing")]
     [SerializeField] private float dodgeDistance = 1.5f;
 
-    [Header("Cooldown Settings")]
-    [SerializeField] private float attackCooldown = 2.5f;
-    [SerializeField] private float blockCooldown = 2.5f;
-    [SerializeField] private float dodgeCooldown = 5.0f;
+    [Header("Cooldown Settings - 원래값 유지")]
+    [SerializeField] private float attackCooldown = 2.5f; // 원래대로
+    [SerializeField] private float blockCooldown = 2.5f; // 원래대로
+    [SerializeField] private float dodgeCooldown = 5.0f; // 원래대로
 
-    [Header("Status")]
-    [SerializeField] private float maxHP = 100f;
+    [Header("Status - 원래값 유지")]
+    [SerializeField] private float maxHP = 100f; // 원래대로
     [SerializeField] private float currentHP = 100f;
 
     // Components
@@ -50,9 +50,9 @@ public class AttackerController : MonoBehaviour
     private float lastBlockTime = -1000f;
     private float lastDodgeTime = -1000f;
 
-    // Animation durations (calculated from clips)
-    private float attackDuration = 1.0f;
-    private float blockDuration = 1.0f;
+    // Animation durations (calculated from clips) - 원래값 유지
+    private float attackDuration = 1.0f; // 원래대로
+    private float blockDuration = 1.0f; // 원래대로
     private float dodgeDuration = 0.6f;
 
     // States
@@ -281,6 +281,7 @@ public class AttackerController : MonoBehaviour
 
     private IEnumerator BlockCoroutine()
     {
+        Debug.Log($"{gameObject.name} is blocking! (Attacker)");
         isBlocking = true;
         currentCombatState = CombatState.Blocking;
 
@@ -292,6 +293,7 @@ public class AttackerController : MonoBehaviour
 
         yield return new WaitForSeconds(blockDuration);
 
+        Debug.Log($"{gameObject.name} finished blocking (Attacker)");
         lastBlockTime = Time.time;
         isBlocking = false;
         currentCombatState = CombatState.Idle;

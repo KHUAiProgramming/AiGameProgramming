@@ -42,40 +42,54 @@ public class AttackerBT : BehaviorTree.BehaviorTree
 
     protected override void ConstructTree()
     {
-        // 공격형 AI 전략: 단순한 거리 + 확률 기반
+        // 공격형 AI 전략: 단순하고 공격적인 전투
         SelectorNode rootSelector = new SelectorNode(
-            // 1. HP 낮으면 회피 우선
+            // 1. HP 낮으면 회피 우선 (25% 이하)
             new SequenceNode(
-                new AttackerAI.IsLowHP(this, blackboard, 0.3f),
+                new AttackerAI.IsLowHP(this, blackboard, 0.25f),
                 new AttackerAI.CanDodge(this, blackboard),
                 new AttackerAI.DodgeAway(this, blackboard)
             ),
 
-            // 2. 근거리에서 공격 가능하면 공격 (70% 확률)
+            // 2. 위험할 때 방어 (50% 확률로 증가)
             new SequenceNode(
-                new AttackerAI.IsInRange(this, blackboard, 1.5f),
+                new AttackerAI.IsInRange(this, blackboard, 2.0f), // 2미터 이내에서
+                new AttackerAI.CanBlock(this, blackboard),
+                new AttackerAI.RandomChance(this, blackboard, 0.5f), // 50% 확률
+                new AttackerAI.BlockAction(this, blackboard)
+            ),
+
+            // 3. 아주 가까이 있으면 즉시 공격 (90% 확률)
+            new SequenceNode(
+                new AttackerAI.IsInRange(this, blackboard, 1.8f),
                 new AttackerAI.CanAttack(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.7f),
+                new AttackerAI.RandomChance(this, blackboard, 0.9f),
                 new AttackerAI.AttackAction(this, blackboard)
             ),
 
-            // 3. 중거리에서 공격 가능하면 공격 (40% 확률)
+            // 4. 중거리에서 적극적 공격 (75% 확률)
             new SequenceNode(
-                new AttackerAI.IsInRange(this, blackboard, 2.5f),
+                new AttackerAI.IsInRange(this, blackboard, 2.8f),
                 new AttackerAI.CanAttack(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.4f),
+                new AttackerAI.RandomChance(this, blackboard, 0.75f),
                 new AttackerAI.AttackAction(this, blackboard)
             ),
 
-            // 4. 가까이 있고 회피 가능하면 회피 (20% 확률)
+            // 5. 너무 가까우면 회피 (40% 확률)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 1.0f),
                 new AttackerAI.CanDodge(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.2f),
+                new AttackerAI.RandomChance(this, blackboard, 0.4f),
                 new AttackerAI.DodgeAway(this, blackboard)
             ),
 
-            // 5. 기본: 접근
+            // 6. 멀리 있으면 적극적 접근 (3미터 이상)
+            new SequenceNode(
+                new AttackerAI.IsFarFromTarget(this, blackboard, 3.0f),
+                new AttackerAI.MoveToTarget(this, blackboard)
+            ),
+
+            // 7. 기본: 계속 접근
             new AttackerAI.MoveToTarget(this, blackboard)
         );
 

@@ -253,4 +253,59 @@ namespace AttackerAI
             base.Reset();
         }
     }
+
+    // 상대방이 방어 중일 때 측면 공격
+    public class FlankAttack : ActionNode
+    {
+        public FlankAttack(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            AttackerController controller = blackboard.GetValue<AttackerController>("controller");
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (controller == null || target == null) return NodeState.Failure;
+
+            // 측면으로 이동해서 공격
+            Vector3 toTarget = target.position - owner.transform.position;
+            Vector3 sideDirection = Vector3.Cross(toTarget.normalized, Vector3.up).normalized;
+
+            // 랜덤하게 좌우 선택
+            if (Random.value > 0.5f) sideDirection = -sideDirection;
+
+            controller.Move(sideDirection);
+            return NodeState.Running;
+        }
+    }
+
+    // 상대방이 공격 중일 때 기회 공격
+    public class CounterAttack : ActionNode
+    {
+        public CounterAttack(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            AttackerController controller = blackboard.GetValue<AttackerController>("controller");
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (controller == null || target == null) return NodeState.Failure;
+
+            if (controller.CanAttack())
+            {
+                // 상대방을 향해 회전 후 즉시 공격
+                Vector3 directionToTarget = (target.position - owner.transform.position).normalized;
+                directionToTarget.y = 0;
+
+                if (directionToTarget.magnitude > 0.1f)
+                {
+                    owner.transform.rotation = Quaternion.LookRotation(directionToTarget);
+                }
+
+                controller.Attack();
+                return NodeState.Success;
+            }
+
+            return NodeState.Failure;
+        }
+    }
 }

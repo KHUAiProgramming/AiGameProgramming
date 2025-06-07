@@ -3,7 +3,7 @@ using UnityEngine;
 public class SwordHitbox : MonoBehaviour
 {
     [Header("Damage Settings")]
-    [SerializeField] private float damage = 25f;
+    [SerializeField] private float damage = 30f; // 25f → 30f로 증가
 
     // 컴포넌트
     private Collider hitboxCollider;
