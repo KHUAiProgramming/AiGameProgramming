@@ -54,9 +54,9 @@ public class AttackerController : MonoBehaviour
     private float lastDodgeTime = -1000f;
 
     // Animation durations (calculated from clips) - 원래값 유지
-    private float kickattackCasting = 0.7f;
+    private float kickattackCasting = 0.5f;
     private float attackDuration = 1.0f; // 원래대로
-    private float kickattackDuration = 1.8f;
+    private float kickattackDuration = 1.5f;
     private float blockDuration = 1.0f; // 원래대로
     private float dodgeDuration = 0.6f;
 
