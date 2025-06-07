@@ -58,24 +58,27 @@ public class DefenderBT : BehaviorTree.BehaviorTree
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 1.8f),
                 new DefenderAI.CanBlock(this, blackboard),
-                new DefenderAI.RandomChance(this, blackboard, 0.6f),
-                new DefenderAI.BlockAction(this, blackboard)
+                new RandomDecorator(0.6f,
+                    new DefenderAI.BlockAction(this, blackboard)
+                )
             ),
 
             // 3. 공격 기회 - 공격 가능할 때 (50% 확률)
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 2.0f),
                 new DefenderAI.CanAttack(this, blackboard),
-                new DefenderAI.RandomChance(this, blackboard, 0.5f),
-                new DefenderAI.AttackAction(this, blackboard)
+                new RandomDecorator(0.5f,
+                    new DefenderAI.AttackAction(this, blackboard)
+                )
             ),
 
             // 4. 회피 - 너무 가까우면 회피 (50% 확률)
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 1.2f),
                 new DefenderAI.CanDodge(this, blackboard),
-                new DefenderAI.RandomChance(this, blackboard, 0.5f),
-                new DefenderAI.DodgeAway(this, blackboard)
+                new RandomDecorator(0.5f,
+                    new DefenderAI.DodgeAway(this, blackboard)
+                )
             ),
 
             // 5. 긴급 상황 - 가장자리에 몰렸으면 중앙으로
@@ -84,10 +87,13 @@ public class DefenderBT : BehaviorTree.BehaviorTree
                 new DefenderAI.MoveToOpenSpace(this, blackboard)
             ),
 
-            // 6. 측면 이동 - 중거리에서 포지셔닝
+            // 6. 중거리 행동 - 랜덤하게 선택
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 3.0f),
-                new DefenderAI.MoveSideways(this, blackboard)
+                new RandomSelector(
+                    new DefenderAI.MoveSideways(this, blackboard),
+                    new DefenderAI.PatrolOrWait(this, blackboard, 3.5f, 0.5f, 0.3f)
+                )
             ),
 
             // 7. 접근 - 너무 멀면 조심스럽게 접근

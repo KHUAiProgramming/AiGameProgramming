@@ -51,36 +51,40 @@ public class AttackerBT : BehaviorTree.BehaviorTree
                 new AttackerAI.DodgeAway(this, blackboard)
             ),
 
-            // 2. 위험할 때 방어 (50% 확률로 증가)
+            // 2. 위험할 때 방어 (50% 확률)
             new SequenceNode(
-                new AttackerAI.IsInRange(this, blackboard, 2.0f), // 2미터 이내에서
+                new AttackerAI.IsInRange(this, blackboard, 2.0f),
                 new AttackerAI.CanBlock(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.5f), // 50% 확률
-                new AttackerAI.BlockAction(this, blackboard)
+                new RandomDecorator(0.5f,
+                    new AttackerAI.BlockAction(this, blackboard)
+                )
             ),
 
             // 3. 아주 가까이 있으면 즉시 공격 (90% 확률)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 1.8f),
                 new AttackerAI.CanAttack(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.9f),
-                new AttackerAI.AttackAction(this, blackboard)
+                new RandomDecorator(0.9f,
+                    new AttackerAI.AttackAction(this, blackboard)
+                )
             ),
 
             // 4. 중거리에서 적극적 공격 (75% 확률)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 2.8f),
                 new AttackerAI.CanAttack(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.75f),
-                new AttackerAI.AttackAction(this, blackboard)
+                new RandomDecorator(0.75f,
+                    new AttackerAI.AttackAction(this, blackboard)
+                )
             ),
 
             // 5. 너무 가까우면 회피 (40% 확률)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 1.0f),
                 new AttackerAI.CanDodge(this, blackboard),
-                new AttackerAI.RandomChance(this, blackboard, 0.4f),
-                new AttackerAI.DodgeAway(this, blackboard)
+                new RandomDecorator(0.4f,
+                    new AttackerAI.DodgeAway(this, blackboard)
+                )
             ),
 
             // 6. 멀리 있으면 적극적 접근 (3미터 이상)

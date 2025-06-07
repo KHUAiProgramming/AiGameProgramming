@@ -216,10 +216,16 @@ namespace DefenderAI
         }
     }
 
-    // 타겟으로 이동 (기존 구현 스타일)
+    // 타겟으로 이동 (설정 가능한 버전)
     public class MoveToTarget : ActionNode
     {
-        public MoveToTarget(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+        private float stopDistance;
+
+        public MoveToTarget(MonoBehaviour owner, Blackboard blackboard, float stopDistance = 1.0f)
+            : base(owner, blackboard)
+        {
+            this.stopDistance = stopDistance;
+        }
 
         public override NodeState Evaluate()
         {
@@ -232,7 +238,7 @@ namespace DefenderAI
             Vector3 toTarget = enemy.position - self.transform.position;
             float distance = Vector3.Distance(self.transform.position, enemy.position);
 
-            if (distance <= 1f)
+            if (distance <= stopDistance)
             {
                 controller.Stop();
                 return NodeState.Success;
@@ -286,10 +292,21 @@ namespace DefenderAI
         }
     }
 
+    // 간단한 거리 유지 - 설정 가능한 버전
     public class PatrolOrWait : ActionNode
     {
-        public PatrolOrWait(MonoBehaviour owner, Blackboard blackboard)
-            : base(owner, blackboard) { }
+        private float idealDistance;
+        private float deadZone;
+        private float moveSpeed;
+
+        public PatrolOrWait(MonoBehaviour owner, Blackboard blackboard,
+                           float idealDistance = 3.5f, float deadZone = 0.7f, float moveSpeed = 0.4f)
+            : base(owner, blackboard)
+        {
+            this.idealDistance = idealDistance;
+            this.deadZone = deadZone;
+            this.moveSpeed = moveSpeed;
+        }
 
         public override NodeState Evaluate()
         {
@@ -299,28 +316,22 @@ namespace DefenderAI
             if (controller == null || target == null) return NodeState.Failure;
 
             float distance = Vector3.Distance(owner.transform.position, target.position);
+            float distanceFromIdeal = distance - idealDistance;
 
-            // 데드존 사용: 2.8~4.2미터 사이에서는 움직이지 않음
-            if (distance < 2.8f)
+            // 데드존 내에서는 완전 정지 (바들바들 방지)
+            if (Mathf.Abs(distanceFromIdeal) <= deadZone)
             {
-                // 너무 가까우면 뒤로 살짝 이동
-                Vector3 awayDirection = (owner.transform.position - target.position).normalized;
-                controller.Move(awayDirection);
-                return NodeState.Running;
-            }
-            else if (distance > 4.2f)
-            {
-                // 너무 멀면 살짝 접근 (하지만 조심스럽게)
-                Vector3 towardDirection = (target.position - owner.transform.position).normalized;
-                controller.Move(towardDirection * 0.5f); // 천천히 이동
-                return NodeState.Running;
-            }
-            else
-            {
-                // 2.8~4.2미터 = 안전구간, 움직이지 않음
                 controller.Stop();
                 return NodeState.Success;
             }
+
+            // 데드존 밖에서만 이동 (부드럽게)
+            Vector3 direction = distanceFromIdeal > 0
+                ? (target.position - owner.transform.position).normalized  // 접근
+                : (owner.transform.position - target.position).normalized; // 후퇴
+
+            controller.Move(direction * moveSpeed); // 설정 가능한 속도로 이동
+            return NodeState.Running;
         }
     }
 
@@ -328,8 +339,13 @@ namespace DefenderAI
     public class MoveToOpenSpace : ActionNode
     {
         private bool isMoving = false;
+        private float safeZoneRatio;  // 맵 크기 대비 안전 영역 비율
 
-        public MoveToOpenSpace(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+        public MoveToOpenSpace(MonoBehaviour owner, Blackboard blackboard, float safeZoneRatio = 0.3f)
+            : base(owner, blackboard)
+        {
+            this.safeZoneRatio = safeZoneRatio;
+        }
 
         public override NodeState Evaluate()
         {
@@ -340,38 +356,31 @@ namespace DefenderAI
             if (controller == null || target == null || groundObject == null) return NodeState.Failure;
 
             Vector3 currentPos = owner.transform.position;
-
-            // 바닥 오브젝트의 중심점을 맵 중심으로 사용
             Vector3 mapCenter = groundObject.position;
-
-            // 바닥 오브젝트의 크기 고려 (스케일 기준)
             Vector3 groundScale = groundObject.localScale;
-            float mapRadius = Mathf.Min(groundScale.x, groundScale.z) * 0.3f; // 바닥 크기의 30% 내부를 안전 영역으로
+            float mapRadius = Mathf.Min(groundScale.x, groundScale.z) * safeZoneRatio; // 설정 가능한 안전 영역
 
-            // 현재 위치가 가장자리에 가까우면 중앙으로
             float distanceFromCenter = Vector3.Distance(currentPos, mapCenter);
 
-            if (distanceFromCenter > mapRadius) // 가장자리에 너무 가까움
+            if (distanceFromCenter > mapRadius)
             {
-                // 맵 중앙 방향으로 이동 시작/계속
                 Vector3 toCenterDirection = (mapCenter - currentPos).normalized;
                 Vector3 moveDirection = GetClosest4Direction(toCenterDirection);
                 controller.Move(moveDirection);
                 isMoving = true;
-                return NodeState.Running; // 이동 중이므로 Running
+                return NodeState.Running;
             }
             else
             {
-                // 안전한 위치에 도달
                 if (isMoving)
                 {
                     controller.Stop();
                     isMoving = false;
-                    return NodeState.Success; // 목표 달성으로 Success
+                    return NodeState.Success;
                 }
                 else
                 {
-                    return NodeState.Failure; // 이미 안전한 위치에 있으므로 이 노드는 실행할 필요 없음
+                    return NodeState.Failure;
                 }
             }
         }
@@ -404,7 +413,16 @@ namespace DefenderAI
     // 공격형을 중앙으로 유도
     public class LureToCenter : ActionNode
     {
-        public LureToCenter(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+        private float edgeRatio;
+        private float lureInterpolation;
+
+        public LureToCenter(MonoBehaviour owner, Blackboard blackboard,
+                           float edgeRatio = 0.4f, float lureInterpolation = 0.7f)
+            : base(owner, blackboard)
+        {
+            this.edgeRatio = edgeRatio;
+            this.lureInterpolation = lureInterpolation;
+        }
 
         public override NodeState Evaluate()
         {
@@ -420,7 +438,7 @@ namespace DefenderAI
 
             // 바닥 오브젝트 크기 기준으로 가장자리 판단
             Vector3 groundScale = groundObject.localScale;
-            float edgeDistance = Mathf.Min(groundScale.x, groundScale.z) * 0.4f;
+            float edgeDistance = Mathf.Min(groundScale.x, groundScale.z) * edgeRatio;
 
             // 공격형이 가장자리에 있으면 중앙으로 유도
             float targetDistanceFromCenter = Vector3.Distance(targetPos, mapCenter);
@@ -428,7 +446,7 @@ namespace DefenderAI
             if (targetDistanceFromCenter > edgeDistance) // 공격형이 가장자리에 있음
             {
                 // 공격형보다 중앙 쪽에서 대기 (유인)
-                Vector3 lurePosition = Vector3.Lerp(targetPos, mapCenter, 0.7f);
+                Vector3 lurePosition = Vector3.Lerp(targetPos, mapCenter, lureInterpolation);
                 Vector3 toLureDirection = (lurePosition - currentPos).normalized;
                 Vector3 moveDirection = GetClosest4Direction(toLureDirection);
 
