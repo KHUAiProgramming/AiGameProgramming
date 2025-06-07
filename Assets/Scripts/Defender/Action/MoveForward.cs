@@ -14,11 +14,12 @@ public class MoveForward : ActionNode
         Transform enemy = blackboard.GetValue<Transform>("target");
         DefenderController controller = blackboard.GetValue<DefenderController>("controller");
 
-        Vector3 targetVector = enemy.position - self.transform.position;
-        Vector3 direction = targetVector.normalized;
-        
-        self.transform.LookAt(enemy);
-        controller.Move(self.transform.forward);
+        Vector3 directionToEnemy = enemy.position - self.transform.position;
+        Quaternion targetRotation = Quaternion.LookRotation(directionToEnemy);
+        self.transform.rotation = Quaternion.Slerp(self.transform.rotation, targetRotation, Time.deltaTime * 10f);
+        Vector3 test = Vector3.right;
+        //controller.Move(self.transform.forward);
+        controller.Move(test);
         
 
         state = NodeState.Success;

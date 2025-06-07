@@ -27,7 +27,7 @@ public class DefenderController : MonoBehaviour
     [SerializeField] private float lastBlockTime = -111111.0f;
     [SerializeField] private float lastDodgeTime = -111111.0f;
 
-    [SerializeField] private float weakAttackDuration = 0.5f;
+    [SerializeField] private float weakAttackDuration = 3f;
     [SerializeField] private float counterDuration = 0.5f;
     [SerializeField] private float blockDuration = 1.0f;
     [SerializeField] private float dodgeDistance = 2.0f;
@@ -168,7 +168,7 @@ public class DefenderController : MonoBehaviour
     private IEnumerator BlockCoroutine()
     {
         isBlocking = true;
-        if (animator) animator.SetTrigger("onBlock");
+        if (animator) animator.SetTrigger("DoShield");
         yield return new WaitForSeconds(blockDuration);
 
         if (blockSuccessful)

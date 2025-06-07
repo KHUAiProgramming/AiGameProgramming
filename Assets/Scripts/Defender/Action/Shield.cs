@@ -14,12 +14,9 @@ public class Shield : ActionNode
 
     public override NodeState Evaluate()
     {
-        //Debug.Log("Raising shield!");
-        if (defender != null)
-        {
-            defender.SendMessage("Shield");
-        }
+        DefenderController controller = blackboard.GetValue<DefenderController>("controller");
 
+        controller.Block();
         state = NodeState.Success;
         return state;
     }

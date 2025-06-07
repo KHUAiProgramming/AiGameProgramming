@@ -7,8 +7,14 @@ public class IsEnemyInRange : ConditionNode
 
     public override NodeState Evaluate()
     {
-        float distance = blackboard.GetValue<float>("enemyDistance");
-        state = (distance < 5f) ? NodeState.Success : NodeState.Failure;
+        MonoBehaviour self = blackboard.GetValue<MonoBehaviour>("self");
+        Transform enemy = blackboard.GetValue<Transform>("target");
+        DefenderController controller = blackboard.GetValue<DefenderController>("controller");
+
+        Vector3 targetVector = enemy.position - self.transform.position;
+        Debug.Log(targetVector);
+        float distance = targetVector.magnitude;
+        state = (distance < 1f) ? NodeState.Success : NodeState.Failure;
         return state;
     }
 }

@@ -17,8 +17,9 @@ public class MoveBackward : ActionNode
         Vector3 directionToEnemy = enemy.position - self.transform.position;
         Quaternion targetRotation = Quaternion.LookRotation(directionToEnemy);
         self.transform.rotation = Quaternion.Slerp(self.transform.rotation, targetRotation, Time.deltaTime * 10f);
-
-        controller.Move(-self.transform.forward);
+        Vector3 test = Vector3.right;
+        //controller.Move(-self.transform.forward);
+        controller.Move(test);
         
 
         state = NodeState.Success;

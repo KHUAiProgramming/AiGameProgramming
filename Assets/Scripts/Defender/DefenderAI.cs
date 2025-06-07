@@ -58,7 +58,7 @@ public class DefenderAI : BehaviorTree.BehaviorTree
             new RandomSelectorNode(attack, shield)
         );
 
-        var combatRandomSelector = new SelectorNode(attack, shield);
+        var combatRandomSelector = new RandomSelectorNode(attack, shield);
 
         var combatSequence = new SequenceNode(isEnemyInRange, combatRandomSelector);
 
