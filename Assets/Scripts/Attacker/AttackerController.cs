@@ -39,6 +39,7 @@ public class AttackerController : MonoBehaviour
     private Animator animator;
     private Rigidbody rb;
     private SwordHitbox swordHitbox;
+    private SwordHitbox swordHitboxStrong;
 
     // Combat State
     [SerializeField] private CombatState currentCombatState = CombatState.Idle;
@@ -51,12 +52,15 @@ public class AttackerController : MonoBehaviour
     private float lastDodgeTime = -1000f;
 
     // Animation durations (calculated from clips) - 원래값 유지
+    private float strongattackCasting = 2.0f;
     private float attackDuration = 1.0f; // 원래대로
+    private float strongattackDuration = 4.8f;
     private float blockDuration = 1.0f; // 원래대로
     private float dodgeDuration = 0.6f;
 
     // States
     private bool isAttacking = false;
+    private bool isStrongAttacking = false;
     private bool isBlocking = false;
     private bool isDodging = false;
     private bool isInvincible = false;
@@ -77,6 +81,7 @@ public class AttackerController : MonoBehaviour
     public bool IsInvincible => isInvincible;
     public bool IsDodging => isDodging;
     public bool IsAttacking => isAttacking;
+    public bool IsStrongAttacking => isStrongAttacking;
     public bool IsBlocking => isBlocking;
     public float StateProgress => stateTimer / attackDuration;
     public float AttackCooldownRemaining => Mathf.Max(0f, attackCooldown - (Time.time - lastAttackTime));
@@ -89,12 +94,22 @@ public class AttackerController : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody>();
-        swordHitbox = GetComponentInChildren<SwordHitbox>();
+        SwordHitbox[] swordHitboxes = GetComponentsInChildren<SwordHitbox>();
+
+        foreach (var comp in swordHitboxes)
+        {
+            if (comp.gameObject.name == "SwordHitbox")
+                swordHitbox = comp;
+            if (comp.gameObject.name == "SwordHitbox_StrongAttack")
+                swordHitboxStrong = comp;
+        }
+        
 
         // 컴포넌트 검증
         if (animator == null) Debug.LogError("Animator not found on " + gameObject.name);
         if (rb == null) Debug.LogError("Rigidbody not found on " + gameObject.name);
         if (swordHitbox == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
+        if (swordHitboxStrong == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
 
         // 애니메이션 클립 길이 가져오기
         SetAnimationDurations();
@@ -111,7 +126,7 @@ public class AttackerController : MonoBehaviour
 
     public void Move(Vector3 direction)
     {
-        if (IsAttacking || IsBlocking || IsDodging) return;
+        if (IsAttacking || IsStrongAttacking || IsBlocking || IsDodging) return;
 
         direction.y = 0;
         direction = direction.normalized;
@@ -188,19 +203,19 @@ public class AttackerController : MonoBehaviour
 
     public bool CanAttack()
     {
-        return !IsDead && !IsAttacking && !IsBlocking && !IsDodging &&
+        return !IsDead && !IsAttacking && !IsStrongAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastAttackTime >= attackCooldown;
     }
 
     public bool CanBlock()
     {
-        return !IsDead && !IsAttacking && !IsBlocking && !IsDodging &&
+        return !IsDead && !IsAttacking && !IsStrongAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastBlockTime >= blockCooldown;
     }
 
     public bool CanDodge()
     {
-        return !IsDead && !IsAttacking && !IsBlocking && !IsDodging &&
+        return !IsDead && !IsAttacking && !IsStrongAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastDodgeTime >= dodgeCooldown;
     }
 
@@ -235,6 +250,17 @@ public class AttackerController : MonoBehaviour
         return true;
     }
 
+    public bool StrongAttack()
+    {
+        if (!CanAttack()) return false;
+
+        // 타겟을 향해 회전
+        RotateTowardsTarget();
+
+        StartCoroutine(StrongAttackCorutine());
+        return true;
+    }
+
     private IEnumerator AttackCorutine()
     {
         isAttacking = true;
@@ -259,6 +285,35 @@ public class AttackerController : MonoBehaviour
 
         lastAttackTime = Time.time;
         isAttacking = false;
+        currentCombatState = CombatState.Idle;
+    }
+
+    private IEnumerator StrongAttackCorutine()
+    {
+        isStrongAttacking = true;
+
+        if (animator != null)
+        {
+            animator.SetFloat("AttackSpeed", attackMultiplier);
+            animator.SetTrigger("onStrongAttack");
+        }
+
+        // Casting
+        if (swordHitboxStrong != null)
+        {
+            yield return new WaitForSeconds(strongattackCasting);
+            swordHitboxStrong.EnableHitbox();
+        }
+
+        yield return new WaitForSeconds(strongattackDuration - strongattackCasting);
+
+        if (swordHitboxStrong != null)
+        {
+            swordHitboxStrong.DisableHitbox();
+        }
+
+        lastAttackTime = Time.time;
+        isStrongAttacking = false;
         currentCombatState = CombatState.Idle;
     }
 

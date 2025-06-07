@@ -62,7 +62,7 @@ public class AttackerBT : BehaviorTree.BehaviorTree
                 new AttackerAI.IsInRange(this, blackboard, 2.8f),
                 new AttackerAI.CanAttack(this, blackboard),
                 new RandomDecorator(0.75f,
-                    new AttackerAI.AttackAction(this, blackboard)
+                    new AttackerAI.StrongAttackAction(this, blackboard)
                 )
             ),
 

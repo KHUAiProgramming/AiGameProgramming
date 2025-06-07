@@ -347,13 +347,24 @@ public class DefenderController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        GameObject attackerobj = GameObject.Find("Maria WProp J J Ong");
+        AttackerController attackerController = attackerobj.GetComponent<AttackerController>();
+
+        bool takedStrongAttack = attackerController.IsStrongAttacking;
+
         if (IsInvincible || IsDead) return;
 
-        if (IsBlocking)
+        if (IsBlocking && takedStrongAttack)
         {
-            Debug.Log($"{gameObject.name} blocked {damage} damage!");
-            return;
+            Debug.Log("Can't block strongattack");
         }
+        
+
+        if (IsBlocking)
+            {
+                Debug.Log($"{gameObject.name} blocked {damage} damage!");
+                return;
+            }
 
         currentHP = Mathf.Max(0, currentHP - damage);
         Debug.Log($"{gameObject.name} took {damage} damage. HP: {currentHP}/{maxHP}");

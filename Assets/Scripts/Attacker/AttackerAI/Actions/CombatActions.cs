@@ -65,6 +65,68 @@ namespace AttackerAI
         }
     }
 
+    public class StrongAttackAction : ActionNode
+    {
+        private bool StrongattackStarted = false;
+
+        public StrongAttackAction(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            AttackerController controller = blackboard.GetValue<AttackerController>("controller");
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (controller == null || target == null)
+            {
+                state = NodeState.Failure;
+                return state;
+            }
+
+            if (!StrongattackStarted)
+            {
+                if (controller.CanAttack())
+                {
+                    // 공격 전에 상대방을 향해 회전!
+                    Vector3 directionToTarget = (target.position - owner.transform.position).normalized;
+                    directionToTarget.y = 0; // Y축 회전 방지
+
+                    if (directionToTarget.magnitude > 0.1f)
+                    {
+                        owner.transform.rotation = Quaternion.LookRotation(directionToTarget);
+                    }
+
+                    controller.StrongAttack();
+                    StrongattackStarted = true;
+                    state = NodeState.Running;
+                }
+                else
+                {
+                    state = NodeState.Failure;
+                }
+            }
+            else
+            {
+                if (controller.IsAttacking)
+                {
+                    state = NodeState.Running;
+                }
+                else
+                {
+                    StrongattackStarted = false;
+                    state = NodeState.Success;
+                }
+            }
+
+            return state;
+        }
+
+        public override void Reset()
+        {
+            StrongattackStarted = false;
+            base.Reset();
+        }
+    }
+
     // 방어 액션
     public class BlockAction : ActionNode
     {
