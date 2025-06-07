@@ -109,7 +109,8 @@ public class DefenderController : MonoBehaviour
         if (swordHitbox == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
         if (targetAttacker == null)
         {
-            targetAttacker = FindObjectOfType<AttackerController>();
+            GameObject attackerobj = GameObject.Find("Maria WProp J J Ong");
+            targetAttacker = attackerobj.GetComponent<AttackerController>();
         }
 
         SetAnimationDurations();
@@ -355,25 +356,13 @@ public class DefenderController : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        GameObject attackerobj = GameObject.Find("Maria WProp J J Ong");
-        AttackerController attackerController = attackerobj.GetComponent<AttackerController>();
-
-        bool takedStrongAttack = attackerController.IsStrongAttacking;
-
         if (IsInvincible || IsDead) return;
 
-        if (IsBlocking && !targetAttacker.IsStrongAttacking)
+        if (IsBlocking && !targetAttacker.IsKickAttacking)
         {
             Debug.Log($"{gameObject.name} blocked {damage} damage!");
 
             AttackerStun();
-            return;
-        }
-
-
-        if (IsBlocking)
-        {
-            Debug.Log($"{gameObject.name} blocked {damage} damage!");
             return;
         }
 

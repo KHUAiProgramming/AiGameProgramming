@@ -56,15 +56,17 @@ public class AttackerBT : BehaviorTree.BehaviorTree
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 1.8f),
                 new AttackerAI.CanAttack(this, blackboard),
+                new AttackerAI.KickAttackAction(this, blackboard),
                 new AttackerAI.AttackAction(this, blackboard)
+                
             ),
 
             // 3. 중거리에서 공격 (75% 확률)
             new SequenceNode(
-                new AttackerAI.IsInRange(this, blackboard, 2.8f),
+                new AttackerAI.IsInRange(this, blackboard, 2.5f),
                 new AttackerAI.CanAttack(this, blackboard),
                 new RandomDecorator(0.75f,
-                    new AttackerAI.StrongAttackAction(this, blackboard)
+                    new AttackerAI.AttackAction(this, blackboard)
                 )
             ),
 

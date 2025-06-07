@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Runtime.CompilerServices;
+using TMPro;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
@@ -39,7 +41,7 @@ public class AttackerController : MonoBehaviour
     private Animator animator;
     private Rigidbody rb;
     private SwordHitbox swordHitbox;
-    private SwordHitbox swordHitboxStrong;
+    private SwordHitbox swordHitboxKick;
 
     // Combat State
     [SerializeField] private CombatState currentCombatState = CombatState.Idle;
@@ -52,19 +54,15 @@ public class AttackerController : MonoBehaviour
     private float lastDodgeTime = -1000f;
 
     // Animation durations (calculated from clips) - 원래값 유지
-    private float strongattackCasting = 2.0f;
+    private float kickattackCasting = 0.7f;
     private float attackDuration = 1.0f; // 원래대로
-    private float strongattackDuration = 4.8f;
+    private float kickattackDuration = 1.8f;
     private float blockDuration = 1.0f; // 원래대로
     private float dodgeDuration = 0.6f;
 
     // States
     private bool isAttacking = false;
-<<<<<<< HEAD
-    private bool isStrongAttacking = false;
-=======
-    private bool isStrongAttacking = false; // 강한 공격 여부
->>>>>>> 34c289f (feat: stun)
+    private bool isKickAttacking = false; // 강한 공격 여부
     private bool isBlocking = false;
     private bool isDodging = false;
     private bool isInvincible = false;
@@ -86,7 +84,7 @@ public class AttackerController : MonoBehaviour
     public bool IsInvincible => isInvincible;
     public bool IsDodging => isDodging;
     public bool IsAttacking => isAttacking;
-    public bool IsStrongAttacking => isStrongAttacking;
+    public bool IsKickAttacking => isKickAttacking;
     public bool IsBlocking => isBlocking;
     public bool IsStunned => isStunned && Time.time < stunEndTime;
     public float StateProgress => stateTimer / attackDuration;
@@ -106,8 +104,8 @@ public class AttackerController : MonoBehaviour
         {
             if (comp.gameObject.name == "SwordHitbox")
                 swordHitbox = comp;
-            if (comp.gameObject.name == "SwordHitbox_StrongAttack")
-                swordHitboxStrong = comp;
+            if (comp.gameObject.name == "SwordHitbox_KickAttack")
+                swordHitboxKick = comp;
         }
 
 
@@ -115,7 +113,7 @@ public class AttackerController : MonoBehaviour
         if (animator == null) Debug.LogError("Animator not found on " + gameObject.name);
         if (rb == null) Debug.LogError("Rigidbody not found on " + gameObject.name);
         if (swordHitbox == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
-        if (swordHitboxStrong == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
+        if (swordHitboxKick == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
 
         // 애니메이션 클립 길이 가져오기
         SetAnimationDurations();
@@ -138,7 +136,7 @@ public class AttackerController : MonoBehaviour
 
     public void Move(Vector3 direction)
     {
-        if (IsAttacking || IsStrongAttacking || IsBlocking || IsDodging) return;
+        if (IsAttacking || IsKickAttacking || IsBlocking || IsDodging) return;
 
         direction.y = 0;
         direction = direction.normalized;
@@ -215,19 +213,19 @@ public class AttackerController : MonoBehaviour
 
     public bool CanAttack()
     {
-        return !IsDead && !IsAttacking && !IsStrongAttacking && !IsBlocking && !IsDodging &&
+        return !IsDead && !IsAttacking && !IsKickAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastAttackTime >= attackCooldown;
     }
 
     public bool CanBlock()
     {
-        return !IsDead && !IsAttacking && !IsStrongAttacking && !IsBlocking && !IsDodging &&
+        return !IsDead && !IsAttacking && !IsKickAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastBlockTime >= blockCooldown;
     }
 
     public bool CanDodge()
     {
-        return !IsDead && !IsAttacking && !IsStrongAttacking && !IsBlocking && !IsDodging &&
+        return !IsDead && !IsAttacking && !IsKickAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastDodgeTime >= dodgeCooldown;
     }
 
@@ -262,14 +260,14 @@ public class AttackerController : MonoBehaviour
         return true;
     }
 
-    public bool StrongAttack()
+    public bool KickAttack()
     {
         if (!CanAttack()) return false;
 
         // 타겟을 향해 회전
         RotateTowardsTarget();
 
-        StartCoroutine(StrongAttackCorutine());
+        StartCoroutine(KickAttackCorutine());
         return true;
     }
 
@@ -300,32 +298,34 @@ public class AttackerController : MonoBehaviour
         currentCombatState = CombatState.Idle;
     }
 
-    private IEnumerator StrongAttackCorutine()
+    private IEnumerator KickAttackCorutine()
     {
-        isStrongAttacking = true;
+        isKickAttacking = true;
+        transform.eulerAngles = new Vector3(0f, transform.eulerAngles.y + 80f, 0f);
 
         if (animator != null)
         {
             animator.SetFloat("AttackSpeed", attackMultiplier);
-            animator.SetTrigger("onStrongAttack");
+            animator.SetTrigger("onKickAttack");
         }
 
         // Casting
-        if (swordHitboxStrong != null)
+        if (swordHitboxKick != null)
         {
-            yield return new WaitForSeconds(strongattackCasting);
-            swordHitboxStrong.EnableHitbox();
+            yield return new WaitForSeconds(kickattackCasting);
+            swordHitboxKick.EnableHitbox();
         }
 
-        yield return new WaitForSeconds(strongattackDuration - strongattackCasting);
+        yield return new WaitForSeconds(kickattackDuration - kickattackCasting);
 
-        if (swordHitboxStrong != null)
+        if (swordHitboxKick != null)
         {
-            swordHitboxStrong.DisableHitbox();
+            swordHitboxKick.DisableHitbox();
         }
 
+        transform.eulerAngles = new Vector3(0f, transform.eulerAngles.y - 80f, 0f);
         lastAttackTime = Time.time;
-        isStrongAttacking = false;
+        isKickAttacking = false;
         currentCombatState = CombatState.Idle;
     }
 

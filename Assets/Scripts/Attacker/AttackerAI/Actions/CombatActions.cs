@@ -65,11 +65,11 @@ namespace AttackerAI
         }
     }
 
-    public class StrongAttackAction : ActionNode
+    public class KickAttackAction : ActionNode
     {
-        private bool StrongattackStarted = false;
+        private bool KickattackStarted = false;
 
-        public StrongAttackAction(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+        public KickAttackAction(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
 
         public override NodeState Evaluate()
         {
@@ -82,7 +82,7 @@ namespace AttackerAI
                 return state;
             }
 
-            if (!StrongattackStarted)
+            if (!KickattackStarted)
             {
                 if (controller.CanAttack())
                 {
@@ -95,8 +95,8 @@ namespace AttackerAI
                         owner.transform.rotation = Quaternion.LookRotation(directionToTarget);
                     }
 
-                    controller.StrongAttack();
-                    StrongattackStarted = true;
+                    controller.KickAttack();
+                    KickattackStarted = true;
                     state = NodeState.Running;
                 }
                 else
@@ -112,7 +112,7 @@ namespace AttackerAI
                 }
                 else
                 {
-                    StrongattackStarted = false;
+                    KickattackStarted = false;
                     state = NodeState.Success;
                 }
             }
@@ -122,7 +122,7 @@ namespace AttackerAI
 
         public override void Reset()
         {
-            StrongattackStarted = false;
+            KickattackStarted = false;
             base.Reset();
         }
     }
