@@ -27,7 +27,7 @@ public class DefenderController : MonoBehaviour
     [SerializeField] private float lastBlockTime = -111111.0f;
     [SerializeField] private float lastDodgeTime = -111111.0f;
 
-    [SerializeField] private float weakAttackDuration = 3f;
+    [SerializeField] private float weakAttackDuration = 10f;
     [SerializeField] private float counterDuration = 0.5f;
     [SerializeField] private float blockDuration = 1.0f;
     [SerializeField] private float dodgeDistance = 2.0f;
@@ -244,6 +244,12 @@ public class DefenderController : MonoBehaviour
     // 이동 관련 (AttackerController와 호환성을 위해)
     public void Move(Vector3 direction)
     {
+        if (isAttacking)
+        {
+            Debug.Log("움직이려고 했지만 공격 중이라 이동 금지됨");
+            return;
+        }
+
         if (!isDodging && !isAttacking && !isBlocking)
         {
             transform.Translate(direction * 2.5f * Time.deltaTime);
