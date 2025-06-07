@@ -73,6 +73,7 @@ public class AttackerController : MonoBehaviour
     private float dodgeMultiplier = 1.0f; // 회피 속도 조절
     private float attackMultiplier = 1.0f; // 공격 속도 조절
     private float blockMultiplier = 1.0f; // 블록 속도 조절
+    private float kickattackMultiplier = 1.0f;
 
     // Target for rotation
     private Transform currentTarget;
@@ -305,7 +306,7 @@ public class AttackerController : MonoBehaviour
 
         if (animator != null)
         {
-            animator.SetFloat("AttackSpeed", attackMultiplier);
+            animator.SetFloat("KickAttackSpeed", kickattackMultiplier);
             animator.SetTrigger("onKickAttack");
         }
 
@@ -457,6 +458,10 @@ public class AttackerController : MonoBehaviour
         AnimationClip dodgeClip = GetAnimationClip("Standing Dive Forward");
         if (dodgeClip != null)
             dodgeMultiplier = dodgeClip.length / dodgeDuration;
+
+        AnimationClip kickClip = GetAnimationClip("kickattack");
+        if (kickClip != null)
+            kickattackMultiplier = kickClip.length / kickattackDuration;
     }
 
     private AnimationClip GetAnimationClip(string stateName)
