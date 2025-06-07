@@ -543,8 +543,8 @@ namespace DefenderAI
 
             if (controller == null || target == null) return NodeState.Failure;
 
-            // 방어가 막 끝났는지 체크
-            if (!blockCompleted && !controller.IsBlocking)
+            // 방어가 막 끝났는지 체크 (JustFinishedBlocking 프로퍼티 사용)
+            if (controller.JustFinishedBlocking && !blockCompleted)
             {
                 blockCompleted = true;
             }

@@ -45,67 +45,74 @@ public class DefenderBT : BehaviorTree.BehaviorTree
 
     protected override void ConstructTree()
     {
-        // 방어형 AI 전략: 확정적 방어 + 선택적 공격
         SelectorNode rootSelector = new SelectorNode(
-            // 1. 생존 우선 - HP 낮으면 즉시 회피 (확정)
+            // 1. HP 낮으면 즉시 회피
             new SequenceNode(
                 new DefenderAI.IsLowHP(this, blackboard, 0.4f),
                 new DefenderAI.CanDodge(this, blackboard),
                 new DefenderAI.DodgeAway(this, blackboard)
             ),
 
-            // 2. 근거리 필수 방어 - 가까우면 무조건 방어 (확정)
+            // 2. 진짜 반격 - 방어 직후 즉시 반격
+            new SequenceNode(
+                new DefenderAI.IsInRange(this, blackboard, 2.2f),
+                new DefenderAI.CanAttack(this, blackboard),
+                new DefenderAI.CounterAfterBlock(this, blackboard)
+            ),
+
+            // 3. 가까우면 무조건 방어
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 1.8f),
                 new DefenderAI.CanBlock(this, blackboard),
                 new DefenderAI.BlockAction(this, blackboard)
             ),
 
-            // 3. 중거리 방어 - 접근하면 방어 (확정)
+            // 4. 접근하면 방어
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 2.5f),
                 new DefenderAI.CanBlock(this, blackboard),
                 new DefenderAI.BlockAction(this, blackboard)
             ),
 
-            // 4. 반격 기회 - 공격 가능할 때만 (50% 확률)
+            // 5. 일반 공격 50%
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 2.2f),
                 new DefenderAI.CanAttack(this, blackboard),
-                new RandomDecorator(0.5f,  // 핵심: 공격 타이밍 조절
+                new RandomDecorator(0.5f,
                     new DefenderAI.AttackAction(this, blackboard)
                 )
             ),
 
-            // 5. 위험 회피 - 너무 가까우면 회피 (확정)
+            // 5. 너무 가까우면 회피
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 1.2f),
                 new DefenderAI.CanDodge(this, blackboard),
                 new DefenderAI.DodgeAway(this, blackboard)
             ),
 
-            // 6. 긴급 상황 - 가장자리 탈출 (확정)
+            // 6. 가장자리 탈출
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 3.5f),
                 new DefenderAI.MoveToOpenSpace(this, blackboard)
             ),
 
-            // 7. 중거리 행동 - 포지셔닝 선택 (랜덤)
+            // 7. 포지셔닝 선택 (랜덤)
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 3.0f),
-                new RandomSelector(  // 핵심: 행동 패턴 다양화
-                    new DefenderAI.MoveSideways(this, blackboard),
-                    new DefenderAI.PatrolOrWait(this, blackboard, 3.2f, 0.5f, 0.4f)
-                )
+                new DefenderAI.MoveSideways(this, blackboard)
+            // new RandomSelector(
+            //     new DefenderAI.MoveSideways(this, blackboard),
+            //     new DefenderAI.PatrolOrWait(this, blackboard, 3.2f, 0.5f, 0.4f)
+            // )
             ),
 
-            // 8. 조심스럽게 접근 - 너무 멀면 접근 (확정)
+            // 8. 너무 멀면 접근 
             new SequenceNode(
                 new DefenderAI.IsFarFromTarget(this, blackboard, 4.0f),
                 new DefenderAI.MoveToTarget(this, blackboard, 2.5f)
             ),
 
-            // 9. 기본: 안전 거리 유지 (확정)
+            // 9. 기본 거리 유지
             new DefenderAI.PatrolOrWait(this, blackboard, 3.5f, 0.6f, 0.3f)
         );
 

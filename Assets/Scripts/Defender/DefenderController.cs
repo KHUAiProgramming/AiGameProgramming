@@ -69,6 +69,7 @@ public class DefenderController : MonoBehaviour
     private bool isDodging = false;
     private bool isInvincible = false;
     private bool isAttacking = false;
+    private bool justFinishedBlocking = false; // 방어 직후 상태 추적
     private Vector3 currentMoveDirection = Vector3.zero;
     private Transform currentTarget;
 
@@ -81,6 +82,7 @@ public class DefenderController : MonoBehaviour
     public bool IsDodging => isDodging;
     public bool IsAttacking => isAttacking;
     public bool IsBlocking => isBlocking;
+    public bool JustFinishedBlocking => justFinishedBlocking; // 방어 완료 감지용
     public AttackType CurrentAttackType => currentAttackType;
     public CombatState CurrentCombatState => currentCombatState;
     public float StateProgress => stateTimer / attackDuration;
@@ -111,6 +113,12 @@ public class DefenderController : MonoBehaviour
         if (currentCombatState != CombatState.Idle && currentCombatState != CombatState.Blocking && currentCombatState != CombatState.Dodging)
         {
             stateTimer += Time.deltaTime;
+        }
+
+        // 방어 완료 상태를 한 프레임 후 리셋
+        if (justFinishedBlocking)
+        {
+            justFinishedBlocking = false;
         }
     }
 
@@ -296,6 +304,9 @@ public class DefenderController : MonoBehaviour
 
         Stop();
         yield return new WaitForSeconds(1.5f); // 원래대로
+
+        // 방어 완료 직후 상태 플래그 설정
+        justFinishedBlocking = true;
 
         lastBlockTime = Time.time;
         isBlocking = false;
