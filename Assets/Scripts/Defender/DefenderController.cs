@@ -142,7 +142,7 @@ public class DefenderController : MonoBehaviour
         canBeCountered = true;
         currentAttackType = AttackType.Weak;
 
-        if (animator) animator.SetTrigger("onWeakAttack");
+        if (animator) animator.SetTrigger("DoSwing");
         yield return new WaitForSeconds(weakAttackDuration);
 
         lastAttackTime = Time.time;
