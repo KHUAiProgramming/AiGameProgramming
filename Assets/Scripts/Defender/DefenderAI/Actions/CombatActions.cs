@@ -159,20 +159,17 @@ namespace DefenderAI
 
         private Vector3 GetClosest4Direction(Vector3 direction)
         {
-            Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
-            Vector3 closest = directions[0];
-            float maxDot = Vector3.Dot(direction, closest);
-
-            foreach (var dir in directions)
+            // X축과 Z축 중 절댓값이 큰 쪽을 선택
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
             {
-                float dot = Vector3.Dot(direction, dir);
-                if (dot > maxDot)
-                {
-                    maxDot = dot;
-                    closest = dir;
-                }
+                // X축이 더 크면 좌우 이동
+                return direction.x > 0 ? Vector3.right : Vector3.left;
             }
-            return closest;
+            else
+            {
+                // Z축이 더 크면 앞뒤 이동
+                return direction.z > 0 ? Vector3.forward : Vector3.back;
+            }
         }
     }
 
@@ -393,20 +390,17 @@ namespace DefenderAI
 
         private Vector3 GetClosest4Direction(Vector3 direction)
         {
-            Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
-            Vector3 closest = directions[0];
-            float maxDot = Vector3.Dot(direction, closest);
-
-            foreach (var dir in directions)
+            // X축과 Z축 중 절댓값이 큰 쪽을 선택
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
             {
-                float dot = Vector3.Dot(direction, dir);
-                if (dot > maxDot)
-                {
-                    maxDot = dot;
-                    closest = dir;
-                }
+                // X축이 더 크면 좌우 이동
+                return direction.x > 0 ? Vector3.right : Vector3.left;
             }
-            return closest;
+            else
+            {
+                // Z축이 더 크면 앞뒤 이동
+                return direction.z > 0 ? Vector3.forward : Vector3.back;
+            }
         }
     }
 
@@ -462,20 +456,196 @@ namespace DefenderAI
 
         private Vector3 GetClosest4Direction(Vector3 direction)
         {
-            Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
-            Vector3 closest = directions[0];
-            float maxDot = Vector3.Dot(direction, closest);
-
-            foreach (var dir in directions)
+            // X축과 Z축 중 절댓값이 큰 쪽을 선택
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
             {
-                float dot = Vector3.Dot(direction, dir);
-                if (dot > maxDot)
+                // X축이 더 크면 좌우 이동
+                return direction.x > 0 ? Vector3.right : Vector3.left;
+            }
+            else
+            {
+                // Z축이 더 크면 앞뒤 이동
+                return direction.z > 0 ? Vector3.forward : Vector3.back;
+            }
+        }
+    }
+
+    // 전술적 후퇴 - 안전 거리까지 후퇴
+    public class TacticalRetreatAction : ActionNode
+    {
+        private float retreatDistance;
+        private bool isRetreating = false;
+
+        public TacticalRetreatAction(MonoBehaviour owner, Blackboard blackboard, float retreatDistance = 2.0f)
+            : base(owner, blackboard)
+        {
+            this.retreatDistance = retreatDistance;
+        }
+
+        public override NodeState Evaluate()
+        {
+            MonoBehaviour self = blackboard.GetValue<MonoBehaviour>("self");
+            Transform target = blackboard.GetValue<Transform>("target");
+            DefenderController controller = blackboard.GetValue<DefenderController>("controller");
+
+            if (target == null || controller == null || self == null) return NodeState.Failure;
+
+            float currentDistance = Vector3.Distance(self.transform.position, target.position);
+
+            // 충분히 멀어졌으면 성공
+            if (currentDistance >= retreatDistance + 1.0f) // 여유 거리
+            {
+                controller.Stop();
+                isRetreating = false;
+                return NodeState.Success;
+            }
+
+            // 후퇴 계속
+            Vector3 retreatDirection = (self.transform.position - target.position).normalized;
+            Vector3 moveDirection = GetClosest4Direction(retreatDirection);
+            controller.Move(moveDirection);
+            isRetreating = true;
+
+            return NodeState.Running;
+        }
+
+        public override void Reset()
+        {
+            isRetreating = false;
+            base.Reset();
+        }
+
+        private Vector3 GetClosest4Direction(Vector3 direction)
+        {
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+            {
+                return direction.x > 0 ? Vector3.right : Vector3.left;
+            }
+            else
+            {
+                return direction.z > 0 ? Vector3.forward : Vector3.back;
+            }
+        }
+    }
+
+    // 방어 후 즉시 반격
+    public class CounterAfterBlock : ActionNode
+    {
+        private bool blockCompleted = false;
+        private bool counterAttackStarted = false;
+
+        public CounterAfterBlock(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            DefenderController controller = blackboard.GetValue<DefenderController>("controller");
+            Transform target = blackboard.GetValue<Transform>("target");
+
+            if (controller == null || target == null) return NodeState.Failure;
+
+            // 방어가 막 끝났는지 체크
+            if (!blockCompleted && !controller.IsBlocking)
+            {
+                blockCompleted = true;
+            }
+
+            // 방어 완료 후 반격
+            if (blockCompleted && !counterAttackStarted)
+            {
+                if (controller.CanAttack())
                 {
-                    maxDot = dot;
-                    closest = dir;
+                    // 공격 전 회전
+                    Vector3 directionToTarget = (target.position - owner.transform.position).normalized;
+                    directionToTarget.y = 0;
+                    if (directionToTarget.magnitude > 0.1f)
+                    {
+                        owner.transform.rotation = Quaternion.LookRotation(directionToTarget);
+                    }
+
+                    controller.Attack();
+                    counterAttackStarted = true;
+                    return NodeState.Running;
+                }
+                else
+                {
+                    return NodeState.Failure;
                 }
             }
-            return closest;
+
+            // 반격 진행 중
+            if (counterAttackStarted)
+            {
+                if (controller.IsAttacking)
+                {
+                    return NodeState.Running;
+                }
+                else
+                {
+                    // 반격 완료
+                    blockCompleted = false;
+                    counterAttackStarted = false;
+                    return NodeState.Success;
+                }
+            }
+
+            return NodeState.Failure;
+        }
+
+        public override void Reset()
+        {
+            blockCompleted = false;
+            counterAttackStarted = false;
+            base.Reset();
+        }
+    }
+
+    // 능동적 포지셔닝 - 공격형의 움직임에 대응
+    public class AdaptivePositioning : ActionNode
+    {
+        private Vector3 lastTargetPosition;
+        private float positionUpdateTime = 0f;
+        private const float UPDATE_INTERVAL = 0.5f;
+
+        public AdaptivePositioning(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            Transform target = blackboard.GetValue<Transform>("target");
+            DefenderController controller = blackboard.GetValue<DefenderController>("controller");
+
+            if (target == null || controller == null) return NodeState.Failure;
+
+            positionUpdateTime += Time.deltaTime;
+
+            // 일정 시간마다 타겟 위치 업데이트
+            if (positionUpdateTime >= UPDATE_INTERVAL)
+            {
+                Vector3 currentTargetPos = target.position;
+                Vector3 targetMovement = currentTargetPos - lastTargetPosition;
+
+                // 공격형의 이동 방향에 대응하여 측면으로 이동
+                Vector3 perpendicular = Vector3.Cross(targetMovement.normalized, Vector3.up);
+                Vector3 moveDirection = GetClosest4Direction(perpendicular);
+
+                controller.Move(moveDirection * 0.6f); // 적당한 속도로
+
+                lastTargetPosition = currentTargetPos;
+                positionUpdateTime = 0f;
+            }
+
+            return NodeState.Running;
+        }
+
+        private Vector3 GetClosest4Direction(Vector3 direction)
+        {
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+            {
+                return direction.x > 0 ? Vector3.right : Vector3.left;
+            }
+            else
+            {
+                return direction.z > 0 ? Vector3.forward : Vector3.back;
+            }
         }
     }
 }

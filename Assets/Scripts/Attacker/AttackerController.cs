@@ -173,20 +173,17 @@ public class AttackerController : MonoBehaviour
 
     private Vector3 GetClosest4Direction(Vector3 direction)
     {
-        Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
-        Vector3 closest = directions[0];
-        float maxDot = Vector3.Dot(direction, closest);
-
-        foreach (var dir in directions)
+        // X축과 Z축 중 절댓값이 큰 쪽을 선택
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
         {
-            float dot = Vector3.Dot(direction, dir);
-            if (dot > maxDot)
-            {
-                maxDot = dot;
-                closest = dir;
-            }
+            // X축이 더 크면 좌우 이동
+            return direction.x > 0 ? Vector3.right : Vector3.left;
         }
-        return closest;
+        else
+        {
+            // Z축이 더 크면 앞뒤 이동
+            return direction.z > 0 ? Vector3.forward : Vector3.back;
+        }
     }
 
     public bool CanAttack()

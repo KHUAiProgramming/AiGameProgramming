@@ -51,38 +51,34 @@ public class AttackerBT : BehaviorTree.BehaviorTree
                 new AttackerAI.DodgeAway(this, blackboard)
             ),
 
-            // 2. 위험할 때 방어 (50% 확률)
-            new SequenceNode(
-                new AttackerAI.IsInRange(this, blackboard, 2.0f),
-                new AttackerAI.CanBlock(this, blackboard),
-                new RandomDecorator(0.5f,
-                    new AttackerAI.BlockAction(this, blackboard)
-                )
-            ),
-
-            // 3. 아주 가까이 있으면 즉시 공격 (90% 확률)
+            // 2. 아주 가까이 있으면 즉시 공격 (확정)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 1.8f),
                 new AttackerAI.CanAttack(this, blackboard),
-                new RandomDecorator(0.9f,
-                    new AttackerAI.AttackAction(this, blackboard)
-                )
+                new AttackerAI.AttackAction(this, blackboard)
             ),
 
-            // 4. 중거리에서 적극적 공격 (75% 확률)
+            // 3. 중거리에서 적극적 공격 (75% 확률)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 2.8f),
                 new AttackerAI.CanAttack(this, blackboard),
-                new RandomDecorator(0.75f,
+                new RandomDecorator(0.75f,  // 핵심: 공격 빈도 조절
                     new AttackerAI.AttackAction(this, blackboard)
                 )
             ),
 
-            // 5. 너무 가까우면 회피 (40% 확률)
+            // 4. 위험할 때 방어 (확정)
+            new SequenceNode(
+                new AttackerAI.IsInRange(this, blackboard, 2.0f),
+                new AttackerAI.CanBlock(this, blackboard),
+                new AttackerAI.BlockAction(this, blackboard)
+            ),
+
+            // 5. 너무 가까우면 회피 (30% 확률)
             new SequenceNode(
                 new AttackerAI.IsInRange(this, blackboard, 1.0f),
                 new AttackerAI.CanDodge(this, blackboard),
-                new RandomDecorator(0.4f,
+                new RandomDecorator(0.3f,  // 핵심: 때로는 밀어붙이기
                     new AttackerAI.DodgeAway(this, blackboard)
                 )
             ),
