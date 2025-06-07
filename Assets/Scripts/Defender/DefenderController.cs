@@ -146,7 +146,7 @@ public class DefenderController : MonoBehaviour
 
             if (rb != null)
             {
-                rb.velocity = new Vector3(restrictedDirection.x * moveSpeed, rb.velocity.y, restrictedDirection.z * moveSpeed);
+                rb.linearVelocity = new Vector3(restrictedDirection.x * moveSpeed, rb.linearVelocity.y, restrictedDirection.z * moveSpeed);
             }
 
             UpdateMovementAnimation(restrictedDirection);
@@ -163,7 +163,7 @@ public class DefenderController : MonoBehaviour
 
         if (rb != null)
         {
-            rb.velocity = new Vector3(0, rb.velocity.y, 0);
+            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         }
 
         UpdateMovementAnimation(Vector3.zero);
