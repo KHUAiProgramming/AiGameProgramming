@@ -3,127 +3,278 @@ using UnityEngine;
 
 public class DefenderController : MonoBehaviour
 {
-    public enum MoveDirection
-    {
-        None,
-        Forward,
-        Backward,
-        Left,
-        Right
-    }
-
     public enum AttackType
     {
         None,
-        Weak,
-        Counter
+        Weak
     }
 
-    [Header("Defender Stats")]
-    [SerializeField] private Animator animator;
-    [SerializeField] private float attackCooldown = 2.5f;
-    [SerializeField] private float blockCooldown = 2.5f;
-    [SerializeField] private float lastAttackTime = -111111.0f;
-    [SerializeField] private float lastBlockTime = -111111.0f;
-    [SerializeField] private float lastDodgeTime = -111111.0f;
+    public enum CombatState
+    {
+        Idle,
+        WindUp,
+        Commit,
+        Active,
+        Recovery,
+        Blocking,
+        Dodging
+    }
 
-    [SerializeField] private float weakAttackDuration = 0.5f;
-    [SerializeField] private float counterDuration = 0.5f;
-    [SerializeField] private float blockDuration = 1.0f;
+    [Header("Movement Settings")]
+    [SerializeField] private float moveSpeed = 1.8f;
+
+    [Header("Combat Timing")]
+    [Range(0f, 100f)][SerializeField] private float commitPoint = 25f;
+    [Range(0f, 100f)][SerializeField] private float activePoint = 75f;
     [SerializeField] private float dodgeDistance = 2.0f;
-    [SerializeField] private float dodgeDuration = 0.5f;
-    [SerializeField] private float dodgeCooldown = 5.0f;
-    [SerializeField] private float invincibilityDuration = 0.3f;
-    [SerializeField] private float counterWindowDuration = 0.5f;
 
+    [Header("Animation Speed")]
+    [SerializeField] private float attackSpeed = 1.0f;
+    [SerializeField] private float blockSpeed = 1.0f;
+    [SerializeField] private float dodgeSpeed = 1.0f;
+
+    [Header("Cooldown Settings")]
+    [SerializeField] private float attackCooldown = 3.5f;
+    [SerializeField] private float blockCooldown = 2.5f;
+    [SerializeField] private float dodgeCooldown = 4.0f;
+
+    [Header("Duration Settings")]
+    [SerializeField] private float attackDuration = 1.2f;
+    [SerializeField] private float blockDuration = 1.5f;
+    [SerializeField] private float dodgeDuration = 0.8f;
+
+    [Header("Status")]
     [SerializeField] private float maxHP = 100f;
-    [SerializeField] private float currentHP;
+    [SerializeField] private float currentHP = 100f;
 
-    // 방어형 고유 특성
-    private bool isCounterWindowOpen = false;
-    private float counterWindowEndTime = 0f;
-    private bool blockSuccessful = false;
+    // Components
+    private Animator animator;
+    private Rigidbody rb;
+    private SwordHitbox swordHitbox;
 
-    // 상태 관리
-    private bool isAttacking = false;
+    // Combat State
+    [SerializeField] private CombatState currentCombatState = CombatState.Idle;
+    [SerializeField] private float stateTimer = 0f;
+    private AttackType currentAttackType = AttackType.None;
+
+    // Timing
+    private float lastAttackTime = -1000f;
+    private float lastBlockTime = -1000f;
+    private float lastDodgeTime = -1000f;
+    private float windUpTime;
+    private float commitTime;
+
+    // States
     private bool isBlocking = false;
     private bool isDodging = false;
     private bool isInvincible = false;
-    public bool canBeCountered = false;
-    public AttackType currentAttackType = AttackType.None;
+    private bool isAttacking = false;
+    private Vector3 currentMoveDirection = Vector3.zero;
+    private Transform currentTarget;
 
-    // 프로퍼티들
-    public bool IsAttacking => isAttacking;
-    public bool IsBlocking => isBlocking;
-    public bool IsDodging => isDodging;
-    public bool IsInvincible => isInvincible;
-    public bool CanBeCountered => canBeCountered;
-    public AttackType CurrentAttackType => currentAttackType;
-    public bool IsCounterWindowOpen => isCounterWindowOpen;
-    public float CounterWindowRemaining => Mathf.Max(0f, counterWindowEndTime - Time.time);
-
-    public float CurrentHP => currentHP;
+    // Properties
     public float MaxHP => maxHP;
+    public float CurrentHP => currentHP;
     public float HPPercentage => currentHP / maxHP;
     public bool IsDead => currentHP <= 0f;
-
+    public bool IsInvincible => isInvincible;
+    public bool IsDodging => isDodging;
+    public bool IsAttacking => isAttacking;
+    public bool IsBlocking => isBlocking;
+    public AttackType CurrentAttackType => currentAttackType;
+    public CombatState CurrentCombatState => currentCombatState;
+    public float StateProgress => stateTimer / attackDuration;
     public float AttackCooldownRemaining => Mathf.Max(0f, attackCooldown - (Time.time - lastAttackTime));
     public float BlockCooldownRemaining => Mathf.Max(0f, blockCooldown - (Time.time - lastBlockTime));
     public float DodgeCooldownRemaining => Mathf.Max(0f, dodgeCooldown - (Time.time - lastDodgeTime));
+    public float MoveSpeed => moveSpeed;
+    private float attackMultiplier = 1.0f;
+    private float blockMultiplier = 1.0f;
+    private float dodgeMultiplier = 1.0f;
 
     void Start()
     {
-        currentHP = maxHP;
         animator = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+        swordHitbox = GetComponentInChildren<SwordHitbox>();
+
+        if (animator == null) Debug.LogError("Animator not found on " + gameObject.name);
+        if (rb == null) Debug.LogError("Rigidbody not found on " + gameObject.name);
+        if (swordHitbox == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
+
+        SetAnimationDurations();
+        currentHP = maxHP;
     }
 
+    void Update()
+    {
+        if (currentCombatState != CombatState.Idle && currentCombatState != CombatState.Blocking && currentCombatState != CombatState.Dodging)
+        {
+            stateTimer += Time.deltaTime;
+        }
+    }
+
+    // Movement
+    public void Move(Vector3 direction)
+    {
+        if (IsAttacking || IsBlocking || IsDodging) return;
+
+        currentMoveDirection = direction;
+        direction.y = 0;
+        direction = direction.normalized;
+
+        if (direction.magnitude > 0.1f)
+        {
+            Vector3 restrictedDirection = GetClosest4Direction(direction);
+
+            if (rb != null)
+            {
+                rb.velocity = new Vector3(restrictedDirection.x * moveSpeed, rb.velocity.y, restrictedDirection.z * moveSpeed);
+            }
+
+            UpdateMovementAnimation(restrictedDirection);
+        }
+        else
+        {
+            Stop();
+        }
+    }
+
+    public void Stop()
+    {
+        currentMoveDirection = Vector3.zero;
+
+        if (rb != null)
+        {
+            rb.velocity = new Vector3(0, rb.velocity.y, 0);
+        }
+
+        UpdateMovementAnimation(Vector3.zero);
+    }
+
+    private void UpdateMovementAnimation(Vector3 direction)
+    {
+        if (animator == null) return;
+
+        animator.SetBool("Forward", false);
+        animator.SetBool("Backward", false);
+        animator.SetBool("Left", false);
+        animator.SetBool("Right", false);
+        animator.SetBool("IsMoving", false);
+
+        if (direction.magnitude > 0.1f)
+        {
+            animator.SetBool("IsMoving", true);
+
+            if (direction == Vector3.forward)
+                animator.SetBool("Forward", true);
+            else if (direction == Vector3.back)
+                animator.SetBool("Backward", true);
+            else if (direction == Vector3.left)
+                animator.SetBool("Left", true);
+            else if (direction == Vector3.right)
+                animator.SetBool("Right", true);
+        }
+    }
+
+    private Vector3 GetClosest4Direction(Vector3 direction)
+    {
+        Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
+        Vector3 closest = directions[0];
+        float maxDot = Vector3.Dot(direction, closest);
+
+        foreach (var dir in directions)
+        {
+            float dot = Vector3.Dot(direction, dir);
+            if (dot > maxDot)
+            {
+                maxDot = dot;
+                closest = dir;
+            }
+        }
+        return closest;
+    }
+
+    // Combat
     public bool CanAttack()
     {
-        return !IsDead && !isAttacking && !isBlocking && !isDodging &&
+        return !IsDead && !IsAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastAttackTime >= attackCooldown;
     }
 
     public bool CanBlock()
     {
-        return !IsDead && !isAttacking && !isBlocking && !isDodging &&
+        return !IsDead && !IsAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastBlockTime >= blockCooldown;
     }
 
     public bool CanDodge()
     {
-        return !IsDead && !isAttacking && !isBlocking && !isDodging &&
+        return !IsDead && !IsAttacking && !IsBlocking && !IsDodging &&
                Time.time - lastDodgeTime >= dodgeCooldown;
     }
 
-    public bool CanCounter()
+    public void SetTarget(Transform target)
     {
-        return !IsDead && !isAttacking && !isBlocking && !isDodging &&
-               isCounterWindowOpen && Time.time <= counterWindowEndTime &&
-               Time.time - lastAttackTime >= attackCooldown;
+        currentTarget = target;
     }
 
-    // 약공격 (Defender는 강공격 없음)
-    public bool WeakAttack()
+    private void RotateTowardsTarget()
+    {
+        Transform target = currentTarget;
+        if (target != null)
+        {
+            Vector3 direction = (target.position - transform.position).normalized;
+            direction.y = 0;
+
+            if (direction.magnitude > 0.1f)
+            {
+                transform.rotation = Quaternion.LookRotation(direction);
+            }
+        }
+    }
+
+    public bool Attack()
     {
         if (!CanAttack()) return false;
 
-        StartCoroutine(WeakAttackCoroutine());
+        // 타겟을 향해 회전
+        RotateTowardsTarget();
+
+        StartCoroutine(AttackCorutine());
         return true;
     }
 
-    // 반격 (Defender 고유 기술)
-    public bool Counter()
+    private IEnumerator AttackCorutine()
     {
-        if (!CanCounter()) return false;
+        isAttacking = true;
 
-        StartCoroutine(CounterCoroutine());
-        return true;
+        if (swordHitbox != null)
+        {
+            swordHitbox.EnableHitbox();
+        }
+
+        if (animator != null)
+        {
+            animator.SetFloat("AttackSpeed", attackMultiplier);
+            animator.SetTrigger("onAttack");
+        }
+
+        yield return new WaitForSeconds(attackDuration);
+
+        if (swordHitbox != null)
+        {
+            swordHitbox.DisableHitbox();
+        }
+
+        lastAttackTime = Time.time;
+        isAttacking = false;
+        currentCombatState = CombatState.Idle;
     }
 
     public bool Block()
     {
         if (!CanBlock()) return false;
-
         StartCoroutine(BlockCoroutine());
         return true;
     }
@@ -131,127 +282,138 @@ public class DefenderController : MonoBehaviour
     public bool Dodge(Vector3 direction)
     {
         if (!CanDodge()) return false;
-
         StartCoroutine(DodgeCoroutine(direction));
         return true;
-    }
-
-    private IEnumerator WeakAttackCoroutine()
-    {
-        isAttacking = true;
-        canBeCountered = true;
-        currentAttackType = AttackType.Weak;
-
-        if (animator) animator.SetTrigger("onWeakAttack");
-        yield return new WaitForSeconds(weakAttackDuration);
-
-        lastAttackTime = Time.time;
-        isAttacking = false;
-        canBeCountered = false;
-        currentAttackType = AttackType.None;
-    }
-
-    private IEnumerator CounterCoroutine()
-    {
-        isAttacking = true;
-        currentAttackType = AttackType.Counter;
-        isCounterWindowOpen = false; // 반격 기회 소모
-
-        if (animator) animator.SetTrigger("onCounter");
-        yield return new WaitForSeconds(counterDuration);
-
-        lastAttackTime = Time.time; // 공격 쿨타임 공유
-        isAttacking = false;
-        currentAttackType = AttackType.None;
     }
 
     private IEnumerator BlockCoroutine()
     {
         isBlocking = true;
-        if (animator) animator.SetTrigger("onBlock");
-        yield return new WaitForSeconds(blockDuration);
+        currentCombatState = CombatState.Blocking;
 
-        if (blockSuccessful)
+        if (animator != null)
         {
-            isCounterWindowOpen = true;
-            counterWindowEndTime = Time.time + counterWindowDuration;
+            animator.SetFloat("BlockSpeed", blockMultiplier);
+            animator.SetTrigger("onBlock");
         }
-        blockSuccessful = false;
+
+        Stop();
+        yield return new WaitForSeconds(1.5f);
 
         lastBlockTime = Time.time;
         isBlocking = false;
+        currentCombatState = CombatState.Idle;
     }
 
     private IEnumerator DodgeCoroutine(Vector3 direction)
     {
         isDodging = true;
         isInvincible = true;
+        currentCombatState = CombatState.Dodging;
 
+        Vector3 dodgeDirection = GetClosest4Direction(direction.normalized);
         Vector3 startPosition = transform.position;
-        Vector3 targetPosition = startPosition + direction.normalized * dodgeDistance;
+        Vector3 targetPosition = startPosition + dodgeDirection * dodgeDistance;
 
-        if (animator) animator.SetTrigger("onDodge");
+        if (animator != null)
+        {
+            animator.SetFloat("DodgeSpeed", dodgeMultiplier);
+            animator.SetTrigger("onDodge");
+        }
 
         float elapsedTime = 0f;
-        while (elapsedTime < dodgeDuration)
+        while (elapsedTime < 0.8f)
         {
-            transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / dodgeDuration);
+            transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / 0.8f);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        yield return new WaitForSeconds(invincibilityDuration);
+        yield return new WaitForSeconds(0.1f);
 
         lastDodgeTime = Time.time;
         isDodging = false;
         isInvincible = false;
+        currentCombatState = CombatState.Idle;
     }
 
-    public bool TakeDamage(float damage)
+    public void TakeDamage(float damage)
     {
-        if (IsDead || isInvincible) return false;
+        if (IsInvincible || IsDead) return;
 
-        if (isBlocking)
+        if (IsBlocking)
         {
-            blockSuccessful = true; // 반격 기회 생성
-            Debug.Log($"{gameObject.name} blocked {damage} damage! Counter window opens.");
-            return false;
+            Debug.Log($"{gameObject.name} blocked {damage} damage!");
+            return;
         }
 
-        currentHP = Mathf.Max(0f, currentHP - damage);
-        if (IsDead) OnDeath();
-        return true;
+        currentHP = Mathf.Max(0, currentHP - damage);
+        Debug.Log($"{gameObject.name} took {damage} damage. HP: {currentHP}/{maxHP}");
+
+        if (IsDead)
+        {
+            Debug.Log($"{gameObject.name} has been defeated!");
+            OnDeath();
+        }
     }
 
     private void OnDeath()
     {
         StopAllCoroutines();
-        isAttacking = false;
+        currentCombatState = CombatState.Idle;
+        currentAttackType = AttackType.None;
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
-        isCounterWindowOpen = false;
     }
 
-    void Update()
+    public void ResetHP()
     {
-        if (isCounterWindowOpen && Time.time > counterWindowEndTime)
+        currentHP = maxHP;
+        currentCombatState = CombatState.Idle;
+        currentAttackType = AttackType.None;
+        isBlocking = false;
+        isDodging = false;
+        isInvincible = false;
+        StopAllCoroutines();
+    }
+
+    private void SetAnimationDurations()
+    {
+        if (animator == null) return;
+
+        // 공격 애니메이션 길이 가져오기
+        AnimationClip attackClip = GetAnimationClip("slash");
+        if (attackClip != null)
+            attackMultiplier = attackClip.length / attackDuration;
+
+        // 블록 애니메이션 길이 가져오기
+        AnimationClip blockClip = GetAnimationClip("blocking2");
+        if (blockClip != null)
+            blockMultiplier = blockClip.length / blockDuration;
+
+        // 회피 애니메이션 길이 가져오기
+        AnimationClip dodgeClip = GetAnimationClip("Standing Dive Forward");
+        if (dodgeClip != null)
+            dodgeMultiplier = dodgeClip.length / dodgeDuration;
+    }
+
+    private AnimationClip GetAnimationClip(string stateName)
+    {
+        if (animator == null) return null;
+
+        RuntimeAnimatorController controller = animator.runtimeAnimatorController;
+        if (controller == null) return null;
+
+        foreach (AnimationClip clip in controller.animationClips)
         {
-            isCounterWindowOpen = false;
+            if (clip.name.ToLower().Contains(stateName.ToLower()))
+            {
+                return clip;
+            }
         }
+
+        return null;
     }
 
-    // 이동 관련 (AttackerController와 호환성을 위해)
-    public void Move(Vector3 direction)
-    {
-        if (!isDodging && !isAttacking && !isBlocking)
-        {
-            transform.Translate(direction * 2.5f * Time.deltaTime);
-        }
-    }
-
-    public void Stop()
-    {
-        // 이동 중단 (필요시 구현)
-    }
 }
