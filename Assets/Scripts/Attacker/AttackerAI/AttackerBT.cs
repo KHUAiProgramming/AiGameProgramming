@@ -43,6 +43,8 @@ public class AttackerBT : BehaviorTree.BehaviorTree
     protected override void ConstructTree()
     {
         SelectorNode rootSelector = new SelectorNode(
+            new AttackerAI.IsStunned(this, blackboard),
+
             // 1. HP 낮으면 회피 우선 (<=25%)
             new SequenceNode(
                 new AttackerAI.IsLowHP(this, blackboard, 0.25f),

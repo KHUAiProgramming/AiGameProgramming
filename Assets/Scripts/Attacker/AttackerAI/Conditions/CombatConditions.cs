@@ -206,4 +206,29 @@ namespace AttackerAI
             return state;
         }
     }
+
+    // 스턴 상태 체크
+    public class IsStunned : ConditionNode
+    {
+        public IsStunned(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            AttackerController controller = blackboard.GetValue<AttackerController>("controller");
+            if (controller == null)
+            {
+                state = NodeState.Failure;
+                return state;
+            }
+
+            if (controller.IsStunned)
+            {
+                state = NodeState.Success;
+                return state;
+            }
+
+            state = NodeState.Failure;
+            return state;
+        }
+    }
 }

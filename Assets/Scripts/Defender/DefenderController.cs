@@ -47,6 +47,10 @@ public class DefenderController : MonoBehaviour
     [SerializeField] private float maxHP = 100f; // 원래대로
     [SerializeField] private float currentHP = 100f;
 
+    [SerializeField] private float stunDuration = 2.0f;
+    [SerializeField] private AttackerController targetAttacker;
+
+
     // Components
     private Animator animator;
     private Rigidbody rb;
@@ -103,6 +107,10 @@ public class DefenderController : MonoBehaviour
         if (animator == null) Debug.LogError("Animator not found on " + gameObject.name);
         if (rb == null) Debug.LogError("Rigidbody not found on " + gameObject.name);
         if (swordHitbox == null) Debug.LogWarning("SwordHitbox not found in children of " + gameObject.name);
+        if (targetAttacker == null)
+        {
+            targetAttacker = FindObjectOfType<AttackerController>();
+        }
 
         SetAnimationDurations();
         currentHP = maxHP;
@@ -354,17 +362,20 @@ public class DefenderController : MonoBehaviour
 
         if (IsInvincible || IsDead) return;
 
-        if (IsBlocking && takedStrongAttack)
+        if (IsBlocking && !targetAttacker.IsStrongAttacking)
         {
-            Debug.Log("Can't block strongattack");
+            Debug.Log($"{gameObject.name} blocked {damage} damage!");
+
+            AttackerStun();
+            return;
         }
-        
+
 
         if (IsBlocking)
-            {
-                Debug.Log($"{gameObject.name} blocked {damage} damage!");
-                return;
-            }
+        {
+            Debug.Log($"{gameObject.name} blocked {damage} damage!");
+            return;
+        }
 
         currentHP = Mathf.Max(0, currentHP - damage);
         Debug.Log($"{gameObject.name} took {damage} damage. HP: {currentHP}/{maxHP}");
@@ -373,6 +384,16 @@ public class DefenderController : MonoBehaviour
         {
             Debug.Log($"{gameObject.name} has been defeated!");
             OnDeath();
+        }
+    }
+
+    private void AttackerStun()
+    {
+        AttackerController attacker = targetAttacker;
+        if (attacker != null)
+        {
+            attacker.Stun(stunDuration);
+            Debug.Log($"스턴: {stunDuration}s");
         }
     }
 

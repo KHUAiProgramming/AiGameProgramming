@@ -60,10 +60,16 @@ public class AttackerController : MonoBehaviour
 
     // States
     private bool isAttacking = false;
+<<<<<<< HEAD
     private bool isStrongAttacking = false;
+=======
+    private bool isStrongAttacking = false; // 강한 공격 여부
+>>>>>>> 34c289f (feat: stun)
     private bool isBlocking = false;
     private bool isDodging = false;
     private bool isInvincible = false;
+    private bool isStunned = false;
+    private float stunEndTime = 0f;
     private Vector3 currentMoveDirection = Vector3.zero;
 
     private float dodgeMultiplier = 1.0f; // 회피 속도 조절
@@ -73,7 +79,6 @@ public class AttackerController : MonoBehaviour
     // Target for rotation
     private Transform currentTarget;
 
-    // Properties
     public float MaxHP => maxHP;
     public float CurrentHP => currentHP;
     public float HPPercentage => currentHP / maxHP;
@@ -83,6 +88,7 @@ public class AttackerController : MonoBehaviour
     public bool IsAttacking => isAttacking;
     public bool IsStrongAttacking => isStrongAttacking;
     public bool IsBlocking => isBlocking;
+    public bool IsStunned => isStunned && Time.time < stunEndTime;
     public float StateProgress => stateTimer / attackDuration;
     public float AttackCooldownRemaining => Mathf.Max(0f, attackCooldown - (Time.time - lastAttackTime));
     public float BlockCooldownRemaining => Mathf.Max(0f, blockCooldown - (Time.time - lastBlockTime));
@@ -103,7 +109,7 @@ public class AttackerController : MonoBehaviour
             if (comp.gameObject.name == "SwordHitbox_StrongAttack")
                 swordHitboxStrong = comp;
         }
-        
+
 
         // 컴포넌트 검증
         if (animator == null) Debug.LogError("Animator not found on " + gameObject.name);
@@ -121,6 +127,12 @@ public class AttackerController : MonoBehaviour
         if (currentCombatState != CombatState.Idle && currentCombatState != CombatState.Blocking && currentCombatState != CombatState.Dodging)
         {
             stateTimer += Time.deltaTime;
+        }
+
+        if (isStunned && Time.time >= stunEndTime)
+        {
+            isStunned = false;
+            Debug.Log("공격형 에이전트 스턴 해제");
         }
     }
 
@@ -472,4 +484,14 @@ public class AttackerController : MonoBehaviour
     }
 
     public bool IsMoving() => currentMoveDirection.magnitude > 0.1f;
+
+    public void Stun(float duration)
+    {
+        if (IsDead) return;
+
+        isStunned = true;
+        stunEndTime = Time.time + duration;
+
+        Stop();
+    }
 }
