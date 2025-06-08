@@ -399,12 +399,28 @@ public class DefenderController : MonoBehaviour
     public void ResetHP()
     {
         currentHP = maxHP;
-        currentCombatState = CombatState.Idle;
-        currentAttackType = AttackType.None;
+
+        // 모든 액션 상태 초기화
+        isAttacking = false;
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
+        justFinishedBlocking = false;
+
+        // 쿨다운 초기화
+        lastAttackTime = -1000f;
+        lastBlockTime = -1000f;
+        lastDodgeTime = -1000f;
+
+        // 상태 초기화
+        currentCombatState = CombatState.Idle;
+        currentAttackType = AttackType.None;
+
+        // 이동 중지
+        Stop();
         StopAllCoroutines();
+
+        Debug.Log($"{gameObject.name} 상태 완전 초기화 완료");
     }
 
     private void SetAnimationDurations()

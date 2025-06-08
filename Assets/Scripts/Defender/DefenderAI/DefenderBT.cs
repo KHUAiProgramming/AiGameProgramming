@@ -46,6 +46,9 @@ public class DefenderBT : BehaviorTree.BehaviorTree
     protected override void ConstructTree()
     {
         SelectorNode rootSelector = new SelectorNode(
+            // 0. 죽으면 아무것도 하지 않음 (최우선)
+            new DefenderAI.IsDead(this, blackboard),
+
             // 1. HP 낮으면 즉시 회피
             new SequenceNode(
                 new DefenderAI.IsLowHP(this, blackboard, 0.4f),

@@ -268,4 +268,24 @@ namespace DefenderAI
             return state;
         }
     }
+
+    // 죽음 상태 체크 - Behavior Tree 최상위에서 사용
+    public class IsDead : ConditionNode
+    {
+        public IsDead(MonoBehaviour owner, Blackboard blackboard) : base(owner, blackboard) { }
+
+        public override NodeState Evaluate()
+        {
+            DefenderController controller = blackboard.GetValue<DefenderController>("controller");
+            if (controller == null)
+            {
+                state = NodeState.Failure;
+                return state;
+            }
+
+            // 죽으면 Success를 반환하여 다른 모든 행동을 차단
+            state = controller.IsDead ? NodeState.Success : NodeState.Failure;
+            return state;
+        }
+    }
 }

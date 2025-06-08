@@ -43,6 +43,9 @@ public class AttackerBT : BehaviorTree.BehaviorTree
     protected override void ConstructTree()
     {
         SelectorNode rootSelector = new SelectorNode(
+            // 0. 죽으면 아무것도 하지 않음 (최우선)
+            new AttackerAI.IsDead(this, blackboard),
+
             new AttackerAI.IsStunned(this, blackboard),
 
             // 1. HP 낮으면 회피 우선 (<=25%)
@@ -58,7 +61,7 @@ public class AttackerBT : BehaviorTree.BehaviorTree
                 new AttackerAI.CanAttack(this, blackboard),
                 new AttackerAI.KickAttackAction(this, blackboard),
                 new AttackerAI.AttackAction(this, blackboard)
-                
+
             ),
 
             // 3. 중거리에서 공격 (75% 확률)

@@ -431,12 +431,30 @@ public class AttackerController : MonoBehaviour
     public void ResetHP()
     {
         currentHP = maxHP;
-        currentCombatState = CombatState.Idle;
-        currentAttackType = AttackType.None;
+        isStunned = false;
+        stunEndTime = 0f;
+
+        // 모든 액션 상태 초기화
+        isAttacking = false;
+        isKickAttacking = false;
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
+
+        // 쿨다운 초기화
+        lastAttackTime = -1000f;
+        lastBlockTime = -1000f;
+        lastDodgeTime = -1000f;
+
+        // 상태 초기화
+        currentCombatState = CombatState.Idle;
+        currentAttackType = AttackType.None;
+
+        // 이동 중지
+        Stop();
         StopAllCoroutines();
+
+        Debug.Log($"{gameObject.name} 상태 완전 초기화 완료");
     }
 
     // 애니메이션 클립 길이 설정 - DefenderController와 동일한 방식
