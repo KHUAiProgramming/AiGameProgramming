@@ -500,6 +500,11 @@ public class DefenderController : MonoBehaviour
         return null;
     }
 
+    public void ResetStats()
+    {
+        combatStats.Reset();
+    }
+
     // 통계 이벤트 핸들러들 (전투에 영향 없음)
     private void OnAttackAttemptHandler(string agentName, bool success, float damage)
     {
@@ -568,12 +573,6 @@ public class DefenderController : MonoBehaviour
             if (success)
                 combatStats.kickThroughDefense++;
         }
-    }
-
-    // 통계 초기화 메서드 (전투에 영향 없음)
-    public void ResetStats()
-    {
-        combatStats.Reset();
     }
 
 }
