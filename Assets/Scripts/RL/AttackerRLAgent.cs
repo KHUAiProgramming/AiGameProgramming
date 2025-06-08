@@ -15,9 +15,11 @@ public class AttackerRLAgent : Agent
     [SerializeField] private float episodeTimer = 0f;
 
     [Header("Reward Settings")]
-    [SerializeField] private float damageReward = 1.0f;
+    // damageReward 증가 (기존 1)
+    [SerializeField] private float damageReward = 5.0f;
     [SerializeField] private float deathPenalty = -5.0f;
-    [SerializeField] private float timeoutPenalty = -1.0f;
+    // timeoutPenalty 증가 (기존 -1)
+    [SerializeField] private float timeoutPenalty = -5.0f;
     [SerializeField] private float stunPenalty = -0.5f;
     [SerializeField] private float kickThroughDefenseReward = 2.0f;
     [SerializeField] private float normalAttackStunPenalty = -1.0f; // 일반공격으로 스턴당할 때
@@ -36,6 +38,8 @@ public class AttackerRLAgent : Agent
 
         if (btDefender == null)
             btDefender = FindObjectOfType<DefenderController>();
+
+        
 
         if (defenderTransform == null && btDefender != null)
             defenderTransform = btDefender.transform;
