@@ -425,6 +425,8 @@ public class AttackerController : MonoBehaviour
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
+
+        GameResultUI.ShowResult(attackerWon: false);
     }
 
     // HP 리셋 (CombatManager용) - DefenderController와 동일한 인터페이스

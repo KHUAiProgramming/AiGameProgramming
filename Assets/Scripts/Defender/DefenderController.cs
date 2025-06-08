@@ -394,6 +394,8 @@ public class DefenderController : MonoBehaviour
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
+
+        GameResultUI.ShowResult(attackerWon: true);
     }
 
     public void ResetHP()
