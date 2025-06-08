@@ -60,7 +60,10 @@ public class DefenderBT : BehaviorTree.BehaviorTree
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 2.2f),
                 new DefenderAI.CanAttack(this, blackboard),
-                new DefenderAI.CounterAfterBlock(this, blackboard)
+
+                new RandomDecorator(0.5f,
+                    new DefenderAI.CounterAfterBlock(this, blackboard)
+                )
             ),
 
             // 3. 가까우면 무조건 방어
@@ -70,19 +73,18 @@ public class DefenderBT : BehaviorTree.BehaviorTree
                 new DefenderAI.BlockAction(this, blackboard)
             ),
 
-            // 4. 접근하면 방어
+            // 5. 일반 공격 확률을 더 낮춤
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 2.5f),
-                new DefenderAI.CanBlock(this, blackboard),
-                new DefenderAI.BlockAction(this, blackboard)
-            ),
-
-            // 5. 일반 공격 50%
-            new SequenceNode(
-                new DefenderAI.IsInRange(this, blackboard, 2.2f),
-                new DefenderAI.CanAttack(this, blackboard),
-                new RandomDecorator(0.5f,
-                    new DefenderAI.AttackAction(this, blackboard)
+                new ProbabilitySelector(0.15f,
+                    new SequenceNode(
+                        new DefenderAI.CanAttack(this, blackboard),
+                        new DefenderAI.AttackAction(this, blackboard)
+                    ),
+                    new SequenceNode(
+                        new DefenderAI.CanBlock(this, blackboard),
+                        new DefenderAI.BlockAction(this, blackboard)
+                    )
                 )
             ),
 
@@ -103,10 +105,6 @@ public class DefenderBT : BehaviorTree.BehaviorTree
             new SequenceNode(
                 new DefenderAI.IsInRange(this, blackboard, 3.0f),
                 new DefenderAI.MoveSideways(this, blackboard)
-            // new RandomSelector(
-            //     new DefenderAI.MoveSideways(this, blackboard),
-            //     new DefenderAI.PatrolOrWait(this, blackboard, 3.2f, 0.5f, 0.4f)
-            // )
             ),
 
             // 8. 너무 멀면 접근 

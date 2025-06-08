@@ -421,7 +421,11 @@ public class DefenderController : MonoBehaviour
         if (attacker != null)
         {
             attacker.Stun(stunDuration);
-            Debug.Log($"스턴: {stunDuration}s");
+
+            // 자신의 스턴 유발 통계 증가
+            combatStats.stunsCausedByBlock++;
+
+            Debug.Log($"스턴: {stunDuration}s, 방어로 스턴 유발 총 {combatStats.stunsCausedByBlock}회");
         }
     }
 

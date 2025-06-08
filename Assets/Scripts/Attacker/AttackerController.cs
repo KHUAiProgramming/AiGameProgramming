@@ -82,6 +82,8 @@ public class AttackerController : MonoBehaviour
     [Header("전투 통계")]
     public CombatStats combatStats = new CombatStats();
 
+    // 스턴 상태 추적용
+
     public float MaxHP => maxHP;
     public float CurrentHP => currentHP;
     public float HPPercentage => currentHP / maxHP;
@@ -144,12 +146,25 @@ public class AttackerController : MonoBehaviour
         CombatEvents.OnKickAttempt -= OnKickAttemptHandler;
     }
 
+    // 스턴 상태 추적용
+    private bool wasStunnedLastFrame = false;
+
     void Update()
     {
         if (currentCombatState != CombatState.Idle && currentCombatState != CombatState.Blocking && currentCombatState != CombatState.Dodging)
         {
             stateTimer += Time.deltaTime;
         }
+
+        // 스턴 상태 변화 감지 (CSV 기록용)
+        if (IsStunned && !wasStunnedLastFrame)
+        {
+            // 스턴 당함
+            combatStats.stunsTaken++;
+            Debug.Log($"{gameObject.name} 스턴 당함! 총 {combatStats.stunsTaken}회");
+        }
+
+        wasStunnedLastFrame = IsStunned;
 
         if (isStunned && Time.time >= stunEndTime)
         {
@@ -556,12 +571,9 @@ public class AttackerController : MonoBehaviour
 
     public void Stun(float duration)
     {
-        if (IsDead) return;
-
         isStunned = true;
         stunEndTime = Time.time + duration;
-
-        Stop();
+        Debug.Log($"{gameObject.name} 스턴됨! {duration}초간");
     }
 
     // 통계 이벤트 핸들러들 (전투에 영향 없음)
