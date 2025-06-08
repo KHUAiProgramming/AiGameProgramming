@@ -135,13 +135,13 @@ public class CombatSimulationManager : MonoBehaviour
         if (attacker != null)
         {
             attacker.ResetHP();
-            // 추가 상태 초기화가 필요하면 여기에
+            attacker.ResetStats(); // 통계 초기화 (전투에 영향 없음)
         }
 
         if (defender != null)
         {
             defender.ResetHP();
-            // 추가 상태 초기화가 필요하면 여기에
+            defender.ResetStats(); // 통계 초기화 (전투에 영향 없음)
         }
 
         Debug.Log("에이전트 위치 및 상태 초기화 완료");
@@ -180,7 +180,6 @@ public class CombatSimulationManager : MonoBehaviour
         lastWinner = winner;
         float combatDuration = Time.time - combatStartTime;
 
-        // 승리 카운트 업데이트
         switch (winner)
         {
             case "Attacker":
@@ -204,9 +203,25 @@ public class CombatSimulationManager : MonoBehaviour
             winner = winner,
             duration = combatDuration,
             attackerFinalHP = attacker?.CurrentHP ?? 0f,
-            defenderFinalHP = defender?.CurrentHP ?? 0f
+            defenderFinalHP = defender?.CurrentHP ?? 0f,
+            attackerStats = attacker?.combatStats ?? new CombatStats(),
+            defenderStats = defender?.combatStats ?? new CombatStats()
         };
+
+        // 전투 시간 기록
+        result.attackerStats.combatDuration = combatDuration;
+        result.defenderStats.combatDuration = combatDuration;
+        result.attackerStats.finalHP = result.attackerFinalHP;
+        result.defenderStats.finalHP = result.defenderFinalHP;
         combatResults.Add(result);
+
+        // 매 전투마다 CSV 저장
+        string fileName = $"Combat_{currentCombatNumber:D3}_{System.DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        string savedPath = CSVExporter.SaveSingleCombatResult(result, fileName);
+        if (!string.IsNullOrEmpty(savedPath))
+        {
+            Debug.Log($"***** 상세 통계 CSV 파일이 저장되었습니다: {savedPath} *****");
+        }
 
         // 다음 전투 준비
         StartCoroutine(PrepareNextCombat());
@@ -223,20 +238,26 @@ public class CombatSimulationManager : MonoBehaviour
 
     private void EndSimulation()
     {
-        Debug.Log("=== 전투 시뮬레이션 완료 ===");
-        Debug.Log($"총 전투 횟수: {totalCombats}");
-        Debug.Log($"공격형 승리: {attackerWins} ({(float)attackerWins / totalCombats * 100:F1}%)");
-        Debug.Log($"방어형 승리: {defenderWins} ({(float)defenderWins / totalCombats * 100:F1}%)");
-        Debug.Log($"무승부: {draws} ({(float)draws / totalCombats * 100:F1}%)");
+        Debug.Log($"시뮬레이션 완료! 총 {totalCombats}회 전투");
+        Debug.Log($"최종 스코어 - 공격형: {attackerWins}, 방어형: {defenderWins}, 무승부: {draws}");
 
-        // CSV 파일로 저장 (추후 구현)
-        SaveResultsToCSV();
+        // 전체 시뮬레이션 결과 CSV 저장
+        string fileName = $"FullSimulation_{totalCombats}combats_{System.DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        string savedPath = CSVExporter.SaveCombatResults(combatResults, fileName);
+        if (!string.IsNullOrEmpty(savedPath))
+        {
+            Debug.Log($"***** 전체 시뮬레이션 결과 CSV 파일이 저장되었습니다: {savedPath} *****");
+        }
     }
 
     private void SaveResultsToCSV()
     {
-        // CSV 저장 로직은 다음 단계에서 구현
-        Debug.Log("CSV 저장 기능은 다음 단계에서 구현됩니다.");
+        // CSV 파일 저장 (통계 포함)
+        string savedPath = CSVExporter.SaveCombatResults(combatResults);
+        if (!string.IsNullOrEmpty(savedPath))
+        {
+            Debug.Log($"***** 상세 통계 CSV 파일이 저장되었습니다: {savedPath} *****");
+        }
     }
 
     // 에디터용 디버그 메서드
@@ -259,18 +280,4 @@ public class CombatSimulationManager : MonoBehaviour
 
         Debug.Log("시뮬레이션 리셋 완료");
     }
-}
-
-[System.Serializable]
-public class CombatResult
-{
-    public int combatNumber;
-    public string winner;
-    public float duration;
-    public float attackerFinalHP;
-    public float defenderFinalHP;
-
-    // 추후 통계 데이터 추가
-    // public CombatStats attackerStats;
-    // public CombatStats defenderStats;
 }

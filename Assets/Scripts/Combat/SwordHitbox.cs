@@ -81,18 +81,37 @@ public class SwordHitbox : MonoBehaviour
 
         Debug.Log($"SwordHitbox trigger with: {other.name} (Layer: {other.gameObject.layer})");
 
+        // 공격자 찾기 (이 검을 휘두른 사람)
+        string attackerName = transform.root.name;
+
         // AttackerController 먼저 찾기
         AttackerController attackerController = other.GetComponent<AttackerController>();
         if (attackerController == null)
         {
             attackerController = other.GetComponentInParent<AttackerController>();
         }
-
         if (attackerController != null)
         {
             Debug.Log($"Found AttackerController on {other.name}");
+
+            // 방어 중인지 체크
+            bool wasBlocking = attackerController.IsBlocking;
+
+            // 데미지 받음 이벤트 발생 (전투에 영향 없음)
+            CombatEvents.OnDamageTaken?.Invoke(other.name, damage);
+
             attackerController.TakeDamage(damage);
             hasHit = true;
+
+            // 공격 성공 이벤트 발생 (전투에 영향 없음)
+            CombatEvents.OnAttackAttempt?.Invoke(attackerName, true, damage);
+
+            // 방어 실패 이벤트 발생 (만약 방어 중이었다면) (전투에 영향 없음)
+            if (wasBlocking)
+            {
+                CombatEvents.OnBlockAttempt?.Invoke(other.name, false);
+            }
+
             return;
         }
 
@@ -102,12 +121,28 @@ public class SwordHitbox : MonoBehaviour
         {
             defenderController = other.GetComponentInParent<DefenderController>();
         }
-
         if (defenderController != null)
         {
             Debug.Log($"Found DefenderController on {other.name}");
+
+            // 방어 중인지 체크
+            bool wasBlocking = defenderController.IsBlocking;
+
+            // 데미지 받음 이벤트 발생 (전투에 영향 없음)
+            CombatEvents.OnDamageTaken?.Invoke(other.name, damage);
+
             defenderController.TakeDamage(damage);
             hasHit = true;
+
+            // 공격 성공 이벤트 발생 (전투에 영향 없음)
+            CombatEvents.OnAttackAttempt?.Invoke(attackerName, true, damage);
+
+            // 방어 실패 이벤트 발생 (만약 방어 중이었다면) (전투에 영향 없음)
+            if (wasBlocking)
+            {
+                CombatEvents.OnBlockAttempt?.Invoke(other.name, false);
+            }
+
             return;
         }
 

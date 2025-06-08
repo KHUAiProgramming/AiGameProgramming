@@ -78,6 +78,10 @@ public class AttackerController : MonoBehaviour
     // Target for rotation
     private Transform currentTarget;
 
+    // 전투 통계 (전투에 영향 없음)
+    [Header("전투 통계")]
+    public CombatStats combatStats = new CombatStats();
+
     public float MaxHP => maxHP;
     public float CurrentHP => currentHP;
     public float HPPercentage => currentHP / maxHP;
@@ -119,6 +123,25 @@ public class AttackerController : MonoBehaviour
         // 애니메이션 클립 길이 가져오기
         SetAnimationDurations();
         currentHP = maxHP;
+
+        // 통계 이벤트 구독 (전투에 영향 없음)
+        CombatEvents.OnAttackAttempt += OnAttackAttemptHandler;
+        CombatEvents.OnBlockAttempt += OnBlockAttemptHandler;
+        CombatEvents.OnStunCaused += OnStunCausedHandler;
+        CombatEvents.OnDodgeAttempt += OnDodgeAttemptHandler;
+        CombatEvents.OnDamageTaken += OnDamageTakenHandler;
+        CombatEvents.OnKickAttempt += OnKickAttemptHandler;
+    }
+
+    void OnDestroy()
+    {
+        // 이벤트 구독 해제
+        CombatEvents.OnAttackAttempt -= OnAttackAttemptHandler;
+        CombatEvents.OnBlockAttempt -= OnBlockAttemptHandler;
+        CombatEvents.OnStunCaused -= OnStunCausedHandler;
+        CombatEvents.OnDodgeAttempt -= OnDodgeAttemptHandler;
+        CombatEvents.OnDamageTaken -= OnDamageTakenHandler;
+        CombatEvents.OnKickAttempt -= OnKickAttemptHandler;
     }
 
     void Update()
@@ -257,6 +280,9 @@ public class AttackerController : MonoBehaviour
         // 타겟을 향해 회전
         RotateTowardsTarget();
 
+        // 공격 시도 이벤트 발생 (전투에 영향 없음)
+        CombatEvents.OnAttackAttempt?.Invoke(gameObject.name, false, 0f);
+
         StartCoroutine(AttackCorutine());
         return true;
     }
@@ -267,6 +293,9 @@ public class AttackerController : MonoBehaviour
 
         // 타겟을 향해 회전
         RotateTowardsTarget();
+
+        // 발차기 시도 이벤트 발생 (전투에 영향 없음)
+        CombatEvents.OnKickAttempt?.Invoke(gameObject.name, false);
 
         StartCoroutine(KickAttackCorutine());
         return true;
@@ -333,13 +362,26 @@ public class AttackerController : MonoBehaviour
     public bool Block()
     {
         if (!CanBlock()) return false;
+
+        // 방어 시도 이벤트 발생 (전투에 영향 없음)
+        CombatEvents.OnBlockAttempt?.Invoke(gameObject.name, true);
+
         StartCoroutine(BlockCoroutine());
         return true;
     }
 
     public bool Dodge(Vector3 direction)
     {
-        if (!CanDodge()) return false;
+        if (!CanDodge())
+        {
+            // 회피 실패 이벤트 (전투에 영향 없음)
+            CombatEvents.OnDodgeAttempt?.Invoke(gameObject.name, false);
+            return false;
+        }
+
+        // 회피 성공 이벤트 발생 (전투에 영향 없음)
+        CombatEvents.OnDodgeAttempt?.Invoke(gameObject.name, true);
+
         StartCoroutine(DodgeCoroutine(direction));
         return true;
     }
@@ -408,6 +450,10 @@ public class AttackerController : MonoBehaviour
         }
 
         currentHP = Mathf.Max(0, currentHP - damage);
+
+        // 데미지 받음 이벤트 발생 (전투에 영향 없음)
+        CombatEvents.OnDamageTaken?.Invoke(gameObject.name, damage);
+
         Debug.Log($"{gameObject.name} took {damage} damage. HP: {currentHP}/{maxHP}");
 
         if (IsDead)
@@ -516,5 +562,81 @@ public class AttackerController : MonoBehaviour
         stunEndTime = Time.time + duration;
 
         Stop();
+    }
+
+    // 통계 이벤트 핸들러들 (전투에 영향 없음)
+    private void OnAttackAttemptHandler(string agentName, bool success, float damage)
+    {
+        if (agentName == gameObject.name)
+        {
+            combatStats.attackAttempts++;
+            if (success)
+            {
+                combatStats.attackHits++;
+                combatStats.damageDealt += damage;
+            }
+            else
+            {
+                combatStats.attackMisses++;
+            }
+        }
+    }
+
+    private void OnBlockAttemptHandler(string agentName, bool success)
+    {
+        if (agentName == gameObject.name)
+        {
+            combatStats.blockAttempts++;
+            if (success)
+                combatStats.blockSuccesses++;
+            else
+                combatStats.blockFailures++;
+        }
+    }
+
+    private void OnStunCausedHandler(string stunner, string stunned)
+    {
+        if (stunner == gameObject.name)
+        {
+            combatStats.stunsCausedByBlock++;
+        }
+        if (stunned == gameObject.name)
+        {
+            combatStats.stunsTaken++;
+        }
+    }
+
+    private void OnDodgeAttemptHandler(string agentName, bool success)
+    {
+        if (agentName == gameObject.name)
+        {
+            combatStats.dodgeAttempts++;
+            if (success)
+                combatStats.dodgeSuccesses++;
+        }
+    }
+
+    private void OnDamageTakenHandler(string agentName, float damage)
+    {
+        if (agentName == gameObject.name)
+        {
+            combatStats.damageTaken += damage;
+        }
+    }
+
+    private void OnKickAttemptHandler(string agentName, bool success)
+    {
+        if (agentName == gameObject.name)
+        {
+            combatStats.kickAttempts++;
+            if (success)
+                combatStats.kickThroughDefense++;
+        }
+    }
+
+    // 통계 초기화 메서드 (전투에 영향 없음)
+    public void ResetStats()
+    {
+        combatStats.Reset();
     }
 }
