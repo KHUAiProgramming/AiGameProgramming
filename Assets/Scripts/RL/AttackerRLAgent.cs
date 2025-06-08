@@ -215,6 +215,8 @@ public class AttackerRLAgent : Agent
             AddReward(kickThroughDefenseReward);
         }
 
+        
+
         // 거리 기반 보상 (너무 멀리 떨어져 있지 않도록)
         float distance = Vector3.Distance(transform.position, defenderTransform.position);
         if (distance > 5f)
@@ -222,8 +224,14 @@ public class AttackerRLAgent : Agent
             AddReward(-0.001f);
         }
 
+        // 거리 기반 보상 (공격자 특성: 가까이 가려 함, 멀어졌을 때 더 큰 페널티 부여)
+        if (distance > 3f)
+        {
+            AddReward(-0.005f);
+        }
+
         // 시간 페널티 (너무 오래 걸리지 않도록)
-        AddReward(-0.0005f);
+            AddReward(-0.001f);
 
         // 이전 HP 업데이트
         previousAttackerHP = attackerController.CurrentHP;
@@ -235,7 +243,7 @@ public class AttackerRLAgent : Agent
         // 승리 조건: 상대 처치
         if (btDefender.IsDead)
         {
-            AddReward(10f); // 승리 보상
+            AddReward(200f); // 승리 보상
             EndEpisode();
             return;
         }
