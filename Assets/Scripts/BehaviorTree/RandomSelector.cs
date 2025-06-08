@@ -3,14 +3,13 @@ using UnityEngine;
 
 namespace BehaviorTree
 {
-    // 자식 노드들을 랜덤 순서로 실행하는 Selector
-    public class RandomSelector : SelectorNode
+    public class RandomTwoSelector : SelectorNode
     {
         private List<Node> shuffledChildren;
 
-        public RandomSelector() : base() { }
+        public RandomTwoSelector() : base() { }
 
-        public RandomSelector(params Node[] children) : base(children) { }
+        public RandomTwoSelector(params Node[] children) : base(children) { }
 
         public override NodeState Evaluate()
         {
@@ -71,6 +70,38 @@ namespace BehaviorTree
         public override void Reset()
         {
             shuffledChildren = null;
+            base.Reset();
+        }
+    }
+
+    // 확률 기반으로 두 개의 행동 중 하나를 선택하는 Selector
+    public class ProbabilitySelector : Node
+    {
+        private float probability; // 첫 번째 자식이 선택될 확률 (0.0 ~ 1.0)
+        private Node firstChild;
+        private Node secondChild;
+
+        public ProbabilitySelector(float probability, Node firstChild, Node secondChild)
+        {
+            this.probability = Mathf.Clamp01(probability); // 0~1 사이로 제한
+            this.firstChild = firstChild;
+            this.secondChild = secondChild;
+        }
+
+        public override NodeState Evaluate()
+        {
+            // 확률에 따라 자식 선택
+            Node selectedChild = (Random.Range(0f, 1f) <= probability) ? firstChild : secondChild;
+
+            // 선택된 자식 평가
+            state = selectedChild.Evaluate();
+            return state;
+        }
+
+        public override void Reset()
+        {
+            firstChild?.Reset();
+            secondChild?.Reset();
             base.Reset();
         }
     }
