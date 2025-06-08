@@ -5,7 +5,11 @@ public class TrainingManager : MonoBehaviour
     [Header("Training Mode Selection")]
     [SerializeField] private TrainingMode currentMode = TrainingMode.AttackerRL_vs_BTDefender;
 
-    [Header("Agent References")]
+    [Header("Existing Agents (씬에 이미 있는 에이전트들)")]
+    [SerializeField] private GameObject existingAttacker;
+    [SerializeField] private GameObject existingDefender;
+
+    [Header("Agent Prefabs (새로 생성할 경우만 사용)")]
     [SerializeField] private GameObject attackerRLPrefab;
     [SerializeField] private GameObject defenderRLPrefab;
     [SerializeField] private GameObject attackerBTPrefab;
@@ -18,6 +22,9 @@ public class TrainingManager : MonoBehaviour
     [Header("Training Settings")]
     [SerializeField] private int maxEpisodes = 1000;
     [SerializeField] private float episodeTimeout = 30f;
+
+    [Header("Use Existing Agents (체크하면 씬의 기존 에이전트 사용)")]
+    [SerializeField] private bool useExistingAgents = true;
 
     private GameObject currentAttacker;
     private GameObject currentDefender;
@@ -32,31 +39,66 @@ public class TrainingManager : MonoBehaviour
 
     void Start()
     {
+        if (useExistingAgents)
+        {
+            FindExistingAgents();
+        }
+        
         SetupTrainingEnvironment();
+    }
+
+    void FindExistingAgents()
+    {
+        // 씬에서 기존 에이전트들을 찾기
+        if (existingAttacker == null)
+        {
+            // AttackerController가 있는 게임오브젝트 찾기
+            AttackerController[] attackers = FindObjectsOfType<AttackerController>();
+            if (attackers.Length > 0)
+            {
+                existingAttacker = attackers[0].gameObject;
+                Debug.Log($"Found existing attacker: {existingAttacker.name}");
+            }
+        }
+
+        if (existingDefender == null)
+        {
+            // DefenderController가 있는 게임오브젝트 찾기
+            DefenderController[] defenders = FindObjectsOfType<DefenderController>();
+            if (defenders.Length > 0)
+            {
+                existingDefender = defenders[0].gameObject;
+                Debug.Log($"Found existing defender: {existingDefender.name}");
+            }
+        }
+
+        // 스폰 포인트를 기존 에이전트 위치로 설정
+        if (existingAttacker != null && attackerSpawnPoint == null)
+        {
+            attackerSpawnPoint = existingAttacker.transform;
+        }
+
+        if (existingDefender != null && defenderSpawnPoint == null)
+        {
+            defenderSpawnPoint = existingDefender.transform;
+        }
     }
 
     void SetupTrainingEnvironment()
     {
-        // 기존 에이전트들 제거
-        if (currentAttacker != null) DestroyImmediate(currentAttacker);
-        if (currentDefender != null) DestroyImmediate(currentDefender);
-
-        // 스폰 포인트 설정
-        if (attackerSpawnPoint == null)
+        // 기존에 생성된 임시 에이전트들만 제거 (원본은 유지)
+        if (!useExistingAgents)
         {
-            GameObject spawnObj = new GameObject("AttackerSpawn");
-            spawnObj.transform.position = new Vector3(-3f, 0f, 0f);
-            attackerSpawnPoint = spawnObj.transform;
+            if (currentAttacker != null && currentAttacker != existingAttacker) 
+                DestroyImmediate(currentAttacker);
+            if (currentDefender != null && currentDefender != existingDefender) 
+                DestroyImmediate(currentDefender);
         }
 
-        if (defenderSpawnPoint == null)
-        {
-            GameObject spawnObj = new GameObject("DefenderSpawn");
-            spawnObj.transform.position = new Vector3(3f, 0f, 0f);
-            defenderSpawnPoint = spawnObj.transform;
-        }
+        // 스폰 포인트 기본 설정
+        SetupDefaultSpawnPoints();
 
-        // 모드에 따라 에이전트 생성
+        // 모드에 따라 에이전트 설정
         switch (currentMode)
         {
             case TrainingMode.AttackerRL_vs_BTDefender:
@@ -75,42 +117,140 @@ public class TrainingManager : MonoBehaviour
         Debug.Log($"Training Environment Setup Complete - Mode: {currentMode}");
     }
 
+    void SetupDefaultSpawnPoints()
+    {
+        if (attackerSpawnPoint == null)
+        {
+            GameObject spawnObj = new GameObject("AttackerSpawn");
+            spawnObj.transform.position = new Vector3(-3f, 0f, 0f);
+            attackerSpawnPoint = spawnObj.transform;
+        }
+
+        if (defenderSpawnPoint == null)
+        {
+            GameObject spawnObj = new GameObject("DefenderSpawn");
+            spawnObj.transform.position = new Vector3(3f, 0f, 0f);
+            defenderSpawnPoint = spawnObj.transform;
+        }
+    }
+
     void SetupAttackerRLTraining()
     {
-        // RL 공격형 생성
-        if (attackerRLPrefab != null)
+        // 공격형: RL 에이전트 설정
+        if (useExistingAgents && existingAttacker != null)
+        {
+            currentAttacker = existingAttacker;
+            
+            // 기존 BT 제거하고 RL 에이전트 추가
+            AttackerBT existingBT = currentAttacker.GetComponent<AttackerBT>();
+            if (existingBT != null)
+            {
+                existingBT.enabled = false; // BT 비활성화
+            }
+
+            AttackerRLAgent rlAgent = currentAttacker.GetComponent<AttackerRLAgent>();
+            if (rlAgent == null)
+            {
+                rlAgent = currentAttacker.AddComponent<AttackerRLAgent>();
+            }
+            rlAgent.enabled = true;
+
+            currentAttacker.name = "AttackerRL";
+        }
+        else if (attackerRLPrefab != null)
         {
             currentAttacker = Instantiate(attackerRLPrefab, attackerSpawnPoint.position, attackerSpawnPoint.rotation);
             currentAttacker.name = "AttackerRL";
-
-            // AttackerRLAgent 설정
-            AttackerRLAgent rlAgent = currentAttacker.GetComponent<AttackerRLAgent>();
-            if (rlAgent == null)
-                rlAgent = currentAttacker.AddComponent<AttackerRLAgent>();
         }
 
-        // BT 방어형 생성
-        if (defenderBTPrefab != null)
+        // 방어형: BT 에이전트 설정
+        if (useExistingAgents && existingDefender != null)
         {
-            currentDefender = Instantiate(defenderBTPrefab, defenderSpawnPoint.position, defenderSpawnPoint.rotation);
+            currentDefender = existingDefender;
+            
+            // RL 에이전트가 있다면 비활성화하고 BT 활성화
+            DefenderRLAgent existingRL = currentDefender.GetComponent<DefenderRLAgent>();
+            if (existingRL != null)
+            {
+                existingRL.enabled = false;
+            }
+
+            DefenderBT btAgent = currentDefender.GetComponent<DefenderBT>();
+            if (btAgent == null)
+            {
+                btAgent = currentDefender.AddComponent<DefenderBT>();
+            }
+            btAgent.enabled = true;
+
             currentDefender.name = "DefenderBT";
         }
+        else if (defenderRLPrefab != null) // 방어형 BT 프리팹이 없다면 RL 프리팹 사용하고 BT 추가
+        {
+            currentDefender = Instantiate(defenderRLPrefab, defenderSpawnPoint.position, defenderSpawnPoint.rotation);
+            currentDefender.name = "DefenderBT";
+            
+            // RL 에이전트 비활성화하고 BT 추가
+            DefenderRLAgent rlAgent = currentDefender.GetComponent<DefenderRLAgent>();
+            if (rlAgent != null) rlAgent.enabled = false;
+            
+            DefenderBT btAgent = currentDefender.AddComponent<DefenderBT>();
+            btAgent.enabled = true;
+        }
 
-        // 상호 참조 설정
         SetupAgentReferences();
     }
 
     void SetupDefenderRLTraining()
     {
-        // BT 공격형 생성
-        if (attackerBTPrefab != null)
+        // 공격형: BT 에이전트 설정
+        if (useExistingAgents && existingAttacker != null)
+        {
+            currentAttacker = existingAttacker;
+            
+            // RL 에이전트 비활성화하고 BT 활성화
+            AttackerRLAgent existingRL = currentAttacker.GetComponent<AttackerRLAgent>();
+            if (existingRL != null)
+            {
+                existingRL.enabled = false;
+            }
+
+            AttackerBT btAgent = currentAttacker.GetComponent<AttackerBT>();
+            if (btAgent == null)
+            {
+                btAgent = currentAttacker.AddComponent<AttackerBT>();
+            }
+            btAgent.enabled = true;
+
+            currentAttacker.name = "AttackerBT";
+        }
+        else if (attackerBTPrefab != null)
         {
             currentAttacker = Instantiate(attackerBTPrefab, attackerSpawnPoint.position, attackerSpawnPoint.rotation);
             currentAttacker.name = "AttackerBT";
         }
 
-        // RL 방어형 생성
-        if (defenderRLPrefab != null)
+        // 방어형: RL 에이전트 설정
+        if (useExistingAgents && existingDefender != null)
+        {
+            currentDefender = existingDefender;
+            
+            // BT 비활성화하고 RL 활성화
+            DefenderBT existingBT = currentDefender.GetComponent<DefenderBT>();
+            if (existingBT != null)
+            {
+                existingBT.enabled = false;
+            }
+
+            DefenderRLAgent rlAgent = currentDefender.GetComponent<DefenderRLAgent>();
+            if (rlAgent == null)
+            {
+                rlAgent = currentDefender.AddComponent<DefenderRLAgent>();
+            }
+            rlAgent.enabled = true;
+
+            currentDefender.name = "DefenderRL";
+        }
+        else if (defenderRLPrefab != null)
         {
             currentDefender = Instantiate(defenderRLPrefab, defenderSpawnPoint.position, defenderSpawnPoint.rotation);
             currentDefender.name = "DefenderRL";
@@ -121,14 +261,27 @@ public class TrainingManager : MonoBehaviour
                 rlAgent = currentDefender.AddComponent<DefenderRLAgent>();
         }
 
-        // 상호 참조 설정
         SetupAgentReferences();
     }
 
     void SetupMultiAgentTraining()
     {
-        // RL 공격형 생성
-        if (attackerRLPrefab != null)
+        // 공격형: RL 에이전트 설정
+        if (useExistingAgents && existingAttacker != null)
+        {
+            currentAttacker = existingAttacker;
+            
+            AttackerBT existingBT = currentAttacker.GetComponent<AttackerBT>();
+            if (existingBT != null) existingBT.enabled = false;
+
+            AttackerRLAgent rlAgent = currentAttacker.GetComponent<AttackerRLAgent>();
+            if (rlAgent == null)
+                rlAgent = currentAttacker.AddComponent<AttackerRLAgent>();
+            rlAgent.enabled = true;
+
+            currentAttacker.name = "AttackerRL";
+        }
+        else if (attackerRLPrefab != null)
         {
             currentAttacker = Instantiate(attackerRLPrefab, attackerSpawnPoint.position, attackerSpawnPoint.rotation);
             currentAttacker.name = "AttackerRL";
@@ -138,8 +291,22 @@ public class TrainingManager : MonoBehaviour
                 attackerRL = currentAttacker.AddComponent<AttackerRLAgent>();
         }
 
-        // RL 방어형 생성
-        if (defenderRLPrefab != null)
+        // 방어형: RL 에이전트 설정
+        if (useExistingAgents && existingDefender != null)
+        {
+            currentDefender = existingDefender;
+            
+            DefenderBT existingBT = currentDefender.GetComponent<DefenderBT>();
+            if (existingBT != null) existingBT.enabled = false;
+
+            DefenderRLAgent rlAgent = currentDefender.GetComponent<DefenderRLAgent>();
+            if (rlAgent == null)
+                rlAgent = currentDefender.AddComponent<DefenderRLAgent>();
+            rlAgent.enabled = true;
+
+            currentDefender.name = "DefenderRL";
+        }
+        else if (defenderRLPrefab != null)
         {
             currentDefender = Instantiate(defenderRLPrefab, defenderSpawnPoint.position, defenderSpawnPoint.rotation);
             currentDefender.name = "DefenderRL";
@@ -149,7 +316,6 @@ public class TrainingManager : MonoBehaviour
                 defenderRL = currentDefender.AddComponent<DefenderRLAgent>();
         }
 
-        // 상호 참조 설정
         SetupAgentReferences();
     }
 
@@ -159,49 +325,48 @@ public class TrainingManager : MonoBehaviour
 
         // AttackerRLAgent 참조 설정
         AttackerRLAgent attackerRL = currentAttacker.GetComponent<AttackerRLAgent>();
-        if (attackerRL != null)
+        if (attackerRL != null && attackerRL.enabled)
         {
-            DefenderController btDefender = currentDefender.GetComponent<DefenderController>();
-            if (btDefender != null)
+            DefenderController defenderController = currentDefender.GetComponent<DefenderController>();
+            if (defenderController != null)
             {
-                // 리플렉션을 사용하여 private 필드 설정
-                var field = typeof(AttackerRLAgent).GetField("btDefender",
+                // SerializeField로 변경된 필드들을 직접 설정
+                System.Reflection.FieldInfo btDefenderField = typeof(AttackerRLAgent).GetField("btDefender",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                field?.SetValue(attackerRL, btDefender);
+                btDefenderField?.SetValue(attackerRL, defenderController);
 
-                var transformField = typeof(AttackerRLAgent).GetField("defenderTransform",
+                System.Reflection.FieldInfo defenderTransformField = typeof(AttackerRLAgent).GetField("defenderTransform",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                transformField?.SetValue(attackerRL, currentDefender.transform);
+                defenderTransformField?.SetValue(attackerRL, currentDefender.transform);
             }
         }
 
         // DefenderRLAgent 참조 설정
         DefenderRLAgent defenderRL = currentDefender.GetComponent<DefenderRLAgent>();
-        if (defenderRL != null)
+        if (defenderRL != null && defenderRL.enabled)
         {
-            AttackerController btAttacker = currentAttacker.GetComponent<AttackerController>();
-            if (btAttacker != null)
+            AttackerController attackerController = currentAttacker.GetComponent<AttackerController>();
+            if (attackerController != null)
             {
-                // 리플렉션을 사용하여 private 필드 설정
-                var field = typeof(DefenderRLAgent).GetField("btAttacker",
+                System.Reflection.FieldInfo btAttackerField = typeof(DefenderRLAgent).GetField("btAttacker",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                field?.SetValue(defenderRL, btAttacker);
+                btAttackerField?.SetValue(defenderRL, attackerController);
 
-                var transformField = typeof(DefenderRLAgent).GetField("attackerTransform",
+                System.Reflection.FieldInfo attackerTransformField = typeof(DefenderRLAgent).GetField("attackerTransform",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                transformField?.SetValue(defenderRL, currentAttacker.transform);
+                attackerTransformField?.SetValue(defenderRL, currentAttacker.transform);
             }
         }
 
         // BT 에이전트들의 타겟 설정
         AttackerBT attackerBT = currentAttacker.GetComponent<AttackerBT>();
-        if (attackerBT != null)
+        if (attackerBT != null && attackerBT.enabled)
         {
             attackerBT.SetTarget(currentDefender.transform);
         }
 
         DefenderBT defenderBT = currentDefender.GetComponent<DefenderBT>();
-        if (defenderBT != null)
+        if (defenderBT != null && defenderBT.enabled)
         {
             defenderBT.SetTarget(currentAttacker.transform);
         }
@@ -212,7 +377,6 @@ public class TrainingManager : MonoBehaviour
     [ContextMenu("Switch Training Mode")]
     public void SwitchTrainingMode()
     {
-        // 다음 모드로 전환
         int currentIndex = (int)currentMode;
         currentIndex = (currentIndex + 1) % System.Enum.GetValues(typeof(TrainingMode)).Length;
         currentMode = (TrainingMode)currentIndex;
@@ -226,11 +390,18 @@ public class TrainingManager : MonoBehaviour
         SetupTrainingEnvironment();
     }
 
+    [ContextMenu("Find Existing Agents")]
+    public void FindExistingAgentsManually()
+    {
+        FindExistingAgents();
+        Debug.Log($"Found - Attacker: {existingAttacker?.name}, Defender: {existingDefender?.name}");
+    }
+
     void OnValidate()
     {
-        if (Application.isPlaying)
+        if (Application.isPlaying && useExistingAgents)
         {
-            SetupTrainingEnvironment();
+            FindExistingAgents();
         }
     }
 }
