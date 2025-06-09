@@ -225,13 +225,13 @@ public class AttackerRLAgent : Agent
         }
 
         // 거리 기반 보상 (공격자 특성: 가까이 가려 함, 멀어졌을 때 더 큰 페널티 부여)
-        if (distance > 3f)
-        {
-            AddReward(-0.005f);
-        }
+        if (distance < 4f) AddReward(0.005f);
+        else if (distance < 3f) AddReward(0.01f);
+        else if (distance < 2f) AddReward(0.015f);
+        
 
         // 시간 페널티 (너무 오래 걸리지 않도록)
-            AddReward(-0.001f);
+        AddReward(-0.001f);
 
         // 이전 HP 업데이트
         previousAttackerHP = attackerController.CurrentHP;

@@ -872,7 +872,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 652484135}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2dd460c7cd2674b3e884fe6e1e2d7d8e, type: 3}
   m_Name: 
@@ -2325,7 +2325,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 7910659cb343ca047917a59791ac8500, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 5a79baa95573fef489577a065fee5f18, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AttackerRLAgent

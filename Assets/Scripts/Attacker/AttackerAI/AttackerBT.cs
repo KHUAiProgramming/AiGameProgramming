@@ -1,5 +1,6 @@
 using UnityEngine;
 using BehaviorTree;
+using AttackerAI;
 public class AttackerBT : BehaviorTree.BehaviorTree
 {
     [SerializeField] private Transform target;
@@ -47,23 +48,23 @@ public class AttackerBT : BehaviorTree.BehaviorTree
             new AttackerAI.IsStunned(this, blackboard),
 
             new SequenceNode(
+                new ProbabilitySelector(0.2f,
+                    new AttackerAI.MoveAwayFromTarget(this, blackboard),
+                    new AttackerAI.MoveToTarget(this, blackboard)
+                ),
                 new AttackerAI.CanAttack(this, blackboard),
-                new AttackerAI.AttackAction(this, blackboard)
-            ),
-
-            new SequenceNode(
-                new AttackerAI.CanAttack(this, blackboard),
-                new AttackerAI.KickAttackAction(this, blackboard)
-            ),
-
-            new SequenceNode(
-                new AttackerAI.CanBlock(this, blackboard),
-                new RandomDecorator(0.01f,
-                    new AttackerAI.BlockAction(this, blackboard)
+                new AttackerAI.IsInRange(this, blackboard, 1.5f),
+                new ProbabilitySelector(0.7f,
+                    new ProbabilitySelector(0.5f,
+                        new AttackerAI.AttackAction(this, blackboard),
+                        new AttackerAI.KickAttackAction(this, blackboard)
+                    ),
+                    new ProbabilitySelector(0.5f,
+                        new AttackerAI.BlockAction(this, blackboard),
+                        new AttackerAI.DodgeRandom(this, blackboard)
+                    )
                 )
-            ),
-
-            new AttackerAI.MoveToTarget(this, blackboard)
+            )
         );
 
         SetRootNode(rootSelector);

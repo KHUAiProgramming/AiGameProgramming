@@ -282,6 +282,7 @@ namespace AttackerAI
 
         public override NodeState Evaluate()
         {
+        
             MonoBehaviour self = blackboard.GetValue<MonoBehaviour>("self");
             Transform enemy = blackboard.GetValue<Transform>("target");
             AttackerController controller = blackboard.GetValue<AttackerController>("controller");
