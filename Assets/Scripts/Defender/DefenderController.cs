@@ -153,6 +153,15 @@ public class DefenderController : MonoBehaviour
             StartCoroutine(justFinishedBlockingCoroutine());
         }
     }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("DeadZone"))
+        {
+            currentHP -= 100f;
+        }
+    }
+
     private IEnumerator justFinishedBlockingCoroutine()
     {
         yield return new WaitForSeconds(0.01f);
@@ -583,5 +592,5 @@ public class DefenderController : MonoBehaviour
                 combatStats.kickThroughDefense++;
         }
     }
-
+    
 }
