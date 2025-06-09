@@ -98,6 +98,8 @@ public class DefenderController : MonoBehaviour
     private float blockMultiplier = 1.0f;
     private float dodgeMultiplier = 1.0f;
 
+    [SerializeField] private GameResultUI resultUI;
+
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -115,6 +117,15 @@ public class DefenderController : MonoBehaviour
 
         SetAnimationDurations();
         currentHP = maxHP;
+
+        if (resultUI == null)
+        {
+            resultUI = FindObjectOfType<GameResultUI>();
+            if (resultUI == null)
+            {
+                Debug.LogError("GameResultUI 인스턴스를 찾을 수 없습니다. 씬에 존재하는지 확인하세요.");
+            }
+        }
     }
 
     void Update()
@@ -395,7 +406,14 @@ public class DefenderController : MonoBehaviour
         isDodging = false;
         isInvincible = false;
 
-        GameResultUI.ShowResult(attackerWon: true);
+        if (resultUI != null)
+        {
+            resultUI.ShowResult(attackerWon: true);
+        }
+        else
+        {
+            Debug.LogError("resultUI가 연결되지 않았습니다.");
+        }
     }
 
     public void ResetHP()
