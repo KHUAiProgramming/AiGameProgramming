@@ -34,8 +34,8 @@ public class DefenderController : MonoBehaviour
     [SerializeField] private float dodgeSpeed = 1.0f;
 
     [Header("Cooldown Settings - 원래값 유지")]
-    [SerializeField] private float attackCooldown = 3.5f; // 원래대로
-    [SerializeField] private float blockCooldown = 2.5f; // 원래대로
+    [SerializeField] private float attackCooldown = 2.5f; // 원래대로
+    [SerializeField] private float blockCooldown = 2.0f; // 원래대로
     [SerializeField] private float dodgeCooldown = 4.0f; // 원래대로
 
     [Header("Duration Settings - 원래값 유지")]

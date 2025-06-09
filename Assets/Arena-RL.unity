@@ -1653,7 +1653,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1006891647}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
   m_Name: 
@@ -2323,8 +2323,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 20
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 24
+    NumStackedVectorObservations: 4
     m_ActionSpec:
       m_NumContinuousActions: 2
       BranchSizes: 05000000
@@ -2332,7 +2332,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 5a79baa95573fef489577a065fee5f18, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 7de16905c81b5584f8f4adc6c6c59e40, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AttackerRLAgent

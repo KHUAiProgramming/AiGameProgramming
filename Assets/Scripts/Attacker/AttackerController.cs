@@ -29,7 +29,7 @@ public class AttackerController : MonoBehaviour
     [SerializeField] private float dodgeDistance = 1.5f;
 
     [Header("Cooldown Settings - 원래값 유지")]
-    [SerializeField] private float attackCooldown = 2.5f; // 원래대로
+    [SerializeField] private float attackCooldown = 1.5f; // 원래대로
     [SerializeField] private float blockCooldown = 2.5f; // 원래대로
     [SerializeField] private float dodgeCooldown = 5.0f; // 원래대로
 
