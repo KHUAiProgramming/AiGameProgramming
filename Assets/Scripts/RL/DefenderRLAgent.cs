@@ -101,10 +101,10 @@ public class DefenderRLAgent : Agent
         sensor.AddObservation(relativePosition.magnitude / 10f); // 거리
         sensor.AddObservation(Vector3.Dot(transform.forward, relativePosition.normalized)); // 방향
 
-        Vector3 wallrelativePosition1 = wallrelativePosition1 - transform.position;
-        Vector3 wallrelativePosition2 = wallrelativePosition2 - transform.position;
-        Vector3 wallrelativePosition3 = wallrelativePosition3 - transform.position;
-        Vector3 wallrelativePosition4 = wallrelativePosition4 - transform.position;
+        Vector3 wallrelativePosition1 = wallTransform1.position - transform.position;
+        Vector3 wallrelativePosition2 = wallTransform2.position - transform.position;
+        Vector3 wallrelativePosition3 = wallTransform3.position - transform.position;
+        Vector3 wallrelativePosition4 = wallTransform4.position - transform.position;
         sensor.AddObservation(wallrelativePosition1.magnitude / 10f);
         sensor.AddObservation(wallrelativePosition2.magnitude / 10f);
         sensor.AddObservation(wallrelativePosition3.magnitude / 10f);

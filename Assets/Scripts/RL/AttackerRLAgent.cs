@@ -9,6 +9,10 @@ public class AttackerRLAgent : Agent
     [SerializeField] private AttackerController attackerController;
     [SerializeField] private DefenderController btDefender; // BT 수비형 상대
     [SerializeField] private Transform defenderTransform;
+    [SerializeField] private Transform wallTransform1;
+    [SerializeField] private Transform wallTransform2;
+    [SerializeField] private Transform wallTransform3;
+    [SerializeField] private Transform wallTransform4;
 
     [Header("Training Settings")]
     [SerializeField] private float maxEpisodeTime = 30f;
@@ -100,6 +104,15 @@ public class AttackerRLAgent : Agent
         sensor.AddObservation(relativePosition.z / 10f);
         sensor.AddObservation(relativePosition.magnitude / 10f); // 거리
         sensor.AddObservation(Vector3.Dot(transform.forward, relativePosition.normalized)); // 방향
+
+        Vector3 wallrelativePosition1 = wallTransform1.position - transform.position;
+        Vector3 wallrelativePosition2 = wallTransform2.position - transform.position;
+        Vector3 wallrelativePosition3 = wallTransform3.position - transform.position;
+        Vector3 wallrelativePosition4 = wallTransform4.position - transform.position;
+        sensor.AddObservation(wallrelativePosition1.magnitude / 10f);
+        sensor.AddObservation(wallrelativePosition2.magnitude / 10f);
+        sensor.AddObservation(wallrelativePosition3.magnitude / 10f);
+        sensor.AddObservation(wallrelativePosition4.magnitude / 10f);
 
         // 총 20개 관찰값
     }
@@ -229,7 +242,15 @@ public class AttackerRLAgent : Agent
         else if (distance < 3f) AddReward(0.01f);
         else if (distance < 2f) AddReward(0.015f);
         
-        
+        // 벽과의 거리 기반 보상 (벽과 멀어지도록록)
+        float walldistance1 = Vector3.Distance(transform.position, wallTransform1.position);
+        float walldistance2 = Vector3.Distance(transform.position, wallTransform2.position);
+        float walldistance3 = Vector3.Distance(transform.position, wallTransform3.position);
+        float walldistance4 = Vector3.Distance(transform.position, wallTransform4.position);
+        if (walldistance1 < 3f) AddReward(-0.001f);
+        if (walldistance2 < 3f) AddReward(-0.001f);
+        if (walldistance3 < 3f) AddReward(-0.001f);
+        if (walldistance4 < 3f) AddReward(-0.001f);
 
         // 시간 페널티 (너무 오래 걸리지 않도록)
         AddReward(-0.001f);

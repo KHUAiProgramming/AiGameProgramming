@@ -564,6 +564,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 11451b923bd4f30428c073edef2e4e88, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2080937146}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 11451b923bd4f30428c073edef2e4e88, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2080937147}
   m_SourcePrefab: {fileID: 100100000, guid: 11451b923bd4f30428c073edef2e4e88, type: 3}
 --- !u!1 &161272809
 GameObject:
@@ -1692,6 +1695,10 @@ MonoBehaviour:
   defenderController: {fileID: 1127387650}
   btAttacker: {fileID: 2080937139}
   attackerTransform: {fileID: 2080937140}
+  wallTransform1: {fileID: 1712445954}
+  wallTransform2: {fileID: 401299996}
+  wallTransform3: {fileID: 811711888}
+  wallTransform4: {fileID: 1844012578}
   maxEpisodeTime: 30
   episodeTimer: 0
   damageReward: 1
@@ -2352,6 +2359,10 @@ MonoBehaviour:
   attackerController: {fileID: 2080937139}
   btDefender: {fileID: 1127387650}
   defenderTransform: {fileID: 1127387648}
+  wallTransform1: {fileID: 1844012578}
+  wallTransform2: {fileID: 811711888}
+  wallTransform3: {fileID: 401299996}
+  wallTransform4: {fileID: 1712445954}
   maxEpisodeTime: 120
   episodeTimer: 0
   damageReward: 1
@@ -2374,6 +2385,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DecisionPeriod: 5
   TakeActionsBetweenDecisions: 1
+--- !u!114 &2080937147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2080937134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
