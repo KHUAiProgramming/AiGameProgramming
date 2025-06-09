@@ -9,6 +9,10 @@ public class DefenderRLAgent : Agent
     [SerializeField] private DefenderController defenderController;
     [SerializeField] private AttackerController btAttacker; // BT 공격형 상대
     [SerializeField] private Transform attackerTransform;
+    [SerializeField] private Transform wallTransform1;
+    [SerializeField] private Transform wallTransform2;
+    [SerializeField] private Transform wallTransform3;
+    [SerializeField] private Transform wallTransform4;
 
     [Header("Training Settings")]
     [SerializeField] private float maxEpisodeTime = 30f;
@@ -97,7 +101,16 @@ public class DefenderRLAgent : Agent
         sensor.AddObservation(relativePosition.magnitude / 10f); // 거리
         sensor.AddObservation(Vector3.Dot(transform.forward, relativePosition.normalized)); // 방향
 
-        // 총 20개 관찰값
+        Vector3 wallrelativePosition1 = wallrelativePosition1 - transform.position;
+        Vector3 wallrelativePosition2 = wallrelativePosition2 - transform.position;
+        Vector3 wallrelativePosition3 = wallrelativePosition3 - transform.position;
+        Vector3 wallrelativePosition4 = wallrelativePosition4 - transform.position;
+        sensor.AddObservation(wallrelativePosition1.magnitude / 10f);
+        sensor.AddObservation(wallrelativePosition2.magnitude / 10f);
+        sensor.AddObservation(wallrelativePosition3.magnitude / 10f);
+        sensor.AddObservation(wallrelativePosition4.magnitude / 10f);
+
+        // 총 24개 관찰값
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -205,6 +218,16 @@ public class DefenderRLAgent : Agent
             AddReward(-0.001f);
         }
 
+        // 벽과의 거리 기반 보상 (벽과 멀어지도록록)
+        float walldistance1 = Vector3.Distance(transform.position, wallTransform1.position);
+        float walldistance2 = Vector3.Distance(transform.position, wallTransform2.position);
+        float walldistance3 = Vector3.Distance(transform.position, wallTransform3.position);
+        float walldistance4 = Vector3.Distance(transform.position, wallTransform4.position);
+        if (walldistance1 < 3f) AddReward(-0.001f);
+        if (walldistance2 < 3f) AddReward(-0.001f);
+        if (walldistance3 < 3f) AddReward(-0.001f);
+        if (walldistance4 < 3f) AddReward(-0.001f);
+
         // 시간 페널티 (너무 오래 걸리지 않도록)
         AddReward(-0.0005f);
 
@@ -219,7 +242,7 @@ public class DefenderRLAgent : Agent
         // 승리 조건: 상대 처치
         if (btAttacker.IsDead)
         {
-            AddReward(10f); // 승리 보상
+            AddReward(200f); // 승리 보상
             EndEpisode();
             return;
         }
