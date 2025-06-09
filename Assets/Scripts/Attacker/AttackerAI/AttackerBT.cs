@@ -54,8 +54,8 @@ public class AttackerBT : BehaviorTree.BehaviorTree
                 ),
                 new AttackerAI.CanAttack(this, blackboard),
                 new AttackerAI.IsInRange(this, blackboard, 1.5f),
-                new ProbabilitySelector(0.7f,
-                    new ProbabilitySelector(0.5f,
+                new ProbabilitySelector(0.8f,
+                    new ProbabilitySelector(0.7f,
                         new AttackerAI.AttackAction(this, blackboard),
                         new AttackerAI.KickAttackAction(this, blackboard)
                     ),

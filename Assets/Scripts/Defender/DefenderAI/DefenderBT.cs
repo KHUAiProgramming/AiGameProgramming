@@ -50,11 +50,11 @@ public class DefenderBT : BehaviorTree.BehaviorTree
             new DefenderAI.IsDead(this, blackboard),
 
             new DefenderAI.CounterAfterBlock(this, blackboard),
-            
+
             new SequenceNode(
                 new DefenderAI.CanAttack(this, blackboard),
-                new DefenderAI.IsInRange(this, blackboard, 1.4f),
-                new ProbabilitySelector(0.25f,
+                new DefenderAI.IsInRange(this, blackboard, 1.3f),
+                new ProbabilitySelector(0.3f,
                     new DefenderAI.AttackAction(this, blackboard),
                     new ProbabilitySelector(0.7f,
                         new DefenderAI.BlockAction(this, blackboard),

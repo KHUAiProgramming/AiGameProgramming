@@ -57,7 +57,7 @@ public class AttackerController : MonoBehaviour
     private float kickattackCasting = 0.5f;
     private float attackDuration = 1.0f; // 원래대로
     private float kickattackDuration = 1.5f;
-    private float blockDuration = 1.0f; // 원래대로
+    private float blockDuration = 0.8f; // 1.0f -> 0.8f
     private float dodgeDuration = 0.6f;
 
     // States
