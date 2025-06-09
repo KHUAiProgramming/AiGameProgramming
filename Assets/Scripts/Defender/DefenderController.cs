@@ -99,6 +99,7 @@ public class DefenderController : MonoBehaviour
     private float dodgeMultiplier = 1.0f;
 
     [SerializeField] private GameResultUI resultUI;
+    [SerializeField] private DefenderCooldownTimer defenderCooldownUI;
 
     void Start()
     {
@@ -126,6 +127,15 @@ public class DefenderController : MonoBehaviour
                 Debug.LogError("GameResultUI 인스턴스를 찾을 수 없습니다. 씬에 존재하는지 확인하세요.");
             }
         }
+        if (defenderCooldownUI == null)
+        {
+            defenderCooldownUI = FindObjectOfType<DefenderCooldownTimer>();
+            if (defenderCooldownUI == null)
+            {
+                Debug.LogError("DefenderCooldownUI를 찾을 수 없습니다.");
+            }
+        }
+
     }
 
     void Update()
@@ -141,7 +151,6 @@ public class DefenderController : MonoBehaviour
             justFinishedBlocking = false;
         }
     }
-
     // Movement
     public void Move(Vector3 direction)
     {
@@ -267,6 +276,7 @@ public class DefenderController : MonoBehaviour
         RotateTowardsTarget();
 
         StartCoroutine(AttackCorutine());
+        defenderCooldownUI.StartCooldown(0);
         return true;
     }
 
@@ -301,6 +311,7 @@ public class DefenderController : MonoBehaviour
     {
         if (!CanBlock()) return false;
         StartCoroutine(BlockCoroutine());
+        defenderCooldownUI.StartCooldown(1);
         return true;
     }
 
@@ -308,6 +319,7 @@ public class DefenderController : MonoBehaviour
     {
         if (!CanDodge()) return false;
         StartCoroutine(DodgeCoroutine(direction));
+        defenderCooldownUI.StartCooldown(2);
         return true;
     }
 

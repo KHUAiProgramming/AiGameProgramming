@@ -95,6 +95,8 @@ public class AttackerController : MonoBehaviour
     public float MoveSpeed => moveSpeed;
 
     [SerializeField] private GameResultUI resultUI;
+    [SerializeField] private AttackerCooldownTimer attackerCooldownUI;
+
 
     void Start()
     {
@@ -266,8 +268,9 @@ public class AttackerController : MonoBehaviour
 
         // 타겟을 향해 회전
         RotateTowardsTarget();
-
+  
         StartCoroutine(AttackCorutine());
+        attackerCooldownUI.StartCooldown(0);
         return true;
     }
 
@@ -279,6 +282,9 @@ public class AttackerController : MonoBehaviour
         RotateTowardsTarget();
 
         StartCoroutine(KickAttackCorutine());
+        
+        attackerCooldownUI.StartCooldown(1);
+
         return true;
     }
 
@@ -344,14 +350,23 @@ public class AttackerController : MonoBehaviour
     {
         if (!CanBlock()) return false;
         StartCoroutine(BlockCoroutine());
+
+
+        attackerCooldownUI.StartCooldown(2);
+
         return true;
+
     }
 
     public bool Dodge(Vector3 direction)
     {
         if (!CanDodge()) return false;
         StartCoroutine(DodgeCoroutine(direction));
+  
+        attackerCooldownUI.StartCooldown(3);
+
         return true;
+
     }
 
     private IEnumerator BlockCoroutine()
