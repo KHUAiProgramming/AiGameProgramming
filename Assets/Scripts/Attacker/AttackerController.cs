@@ -46,6 +46,7 @@ public class AttackerController : MonoBehaviour
     // Combat State
     [SerializeField] private CombatState currentCombatState = CombatState.Idle;
     [SerializeField] private float stateTimer = 0f;
+    [SerializeField] private GameResultUI resultUI;
     private AttackType currentAttackType = AttackType.None;
 
     // Timing
@@ -133,6 +134,14 @@ public class AttackerController : MonoBehaviour
         CombatEvents.OnDodgeAttempt += OnDodgeAttemptHandler;
         CombatEvents.OnDamageTaken += OnDamageTakenHandler;
         CombatEvents.OnKickAttempt += OnKickAttemptHandler;
+        if (resultUI == null)
+        {
+            resultUI = FindObjectOfType<GameResultUI>();
+            if (resultUI == null)
+            {
+                Debug.LogError("GameResultUI 인스턴스를 찾을 수 없습니다. 씬에 존재하는지 확인하세요.");
+            }
+        }
     }
 
     void OnDestroy()
@@ -486,6 +495,11 @@ public class AttackerController : MonoBehaviour
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
+
+        if (resultUI != null)
+        {
+            resultUI.ShowResult(attackerWon: false);
+        }
     }
 
     // HP 리셋 (CombatManager용) - DefenderController와 동일한 인터페이스

@@ -50,7 +50,7 @@ public class DefenderController : MonoBehaviour
     [SerializeField] private float stunDuration = 2.0f;
     [SerializeField] private AttackerController targetAttacker;
 
-
+    [SerializeField] private GameResultUI resultUI;
     // Components
     private Animator animator;
     private Rigidbody rb;
@@ -127,6 +127,14 @@ public class DefenderController : MonoBehaviour
         CombatEvents.OnDodgeAttempt += OnDodgeAttemptHandler;
         CombatEvents.OnDamageTaken += OnDamageTakenHandler;
         CombatEvents.OnKickAttempt += OnKickAttemptHandler;
+        if (resultUI == null)
+        {
+            resultUI = FindObjectOfType<GameResultUI>();
+            if (resultUI == null)
+            {
+                Debug.LogError("GameResultUI 인스턴스를 찾을 수 없습니다. 씬에 존재하는지 확인하세요.");
+            }
+        }
     }
 
     void OnDestroy()
@@ -442,6 +450,10 @@ public class DefenderController : MonoBehaviour
         isBlocking = false;
         isDodging = false;
         isInvincible = false;
+        if (resultUI != null)
+        {
+            resultUI.ShowResult(attackerWon: true);
+        }
     }
 
     public void ResetHP()
