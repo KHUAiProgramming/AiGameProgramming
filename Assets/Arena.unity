@@ -1748,8 +1748,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b06488b224b6b1b4a9ff923877cf1154, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ResultCanvasDefender: {fileID: 1451379269}
-  ResultCanvasAttacker: {fileID: 1998186261}
+  ResultCanvasDefender: {fileID: 1998186261}
+  ResultCanvasAttacker: {fileID: 1451379269}
 --- !u!1 &908054503
 GameObject:
   m_ObjectHideFlags: 0
@@ -3037,8 +3037,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b06488b224b6b1b4a9ff923877cf1154, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ResultCanvasDefender: {fileID: 1451379269}
-  ResultCanvasAttacker: {fileID: 1998186261}
+  ResultCanvasDefender: {fileID: 1998186261}
+  ResultCanvasAttacker: {fileID: 1451379269}
 --- !u!1 &1321407277
 GameObject:
   m_ObjectHideFlags: 0
