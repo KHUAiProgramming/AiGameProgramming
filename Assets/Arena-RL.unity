@@ -2352,7 +2352,7 @@ MonoBehaviour:
   attackerController: {fileID: 2080937139}
   btDefender: {fileID: 1127387650}
   defenderTransform: {fileID: 1127387648}
-  maxEpisodeTime: 30
+  maxEpisodeTime: 120
   episodeTimer: 0
   damageReward: 1
   deathPenalty: -5
