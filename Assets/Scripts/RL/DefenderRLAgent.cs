@@ -213,20 +213,27 @@ public class DefenderRLAgent : Agent
 
         // 거리 기반 보상 (적당한 거리 유지)
         float distance = Vector3.Distance(transform.position, attackerTransform.position);
-        if (distance > 6f || distance < 1f)
+        if (distance > 4f || distance < 1f)
         {
             AddReward(-0.001f);
         }
+
+        // 너무 멀어지면 더 큰 페널티
+        if (distance > 6f)
+        {
+            AddReward(-0.005f);
+        }
+
 
         // 벽과의 거리 기반 보상 (벽과 멀어지도록록)
         float walldistance1 = Vector3.Distance(transform.position, wallTransform1.position);
         float walldistance2 = Vector3.Distance(transform.position, wallTransform2.position);
         float walldistance3 = Vector3.Distance(transform.position, wallTransform3.position);
         float walldistance4 = Vector3.Distance(transform.position, wallTransform4.position);
-        if (walldistance1 < 3f) AddReward(-0.001f);
-        if (walldistance2 < 3f) AddReward(-0.001f);
-        if (walldistance3 < 3f) AddReward(-0.001f);
-        if (walldistance4 < 3f) AddReward(-0.001f);
+        if (walldistance1 < 5f) AddReward(-0.001f);
+        if (walldistance2 < 5f) AddReward(-0.001f);
+        if (walldistance3 < 5f) AddReward(-0.001f);
+        if (walldistance4 < 5f) AddReward(-0.001f);
 
         // 시간 페널티 (너무 오래 걸리지 않도록)
         AddReward(-0.0005f);
@@ -246,6 +253,7 @@ public class DefenderRLAgent : Agent
             EndEpisode();
             return;
         }
+        
 
         // 패배 조건: 자신 사망
         if (defenderController.IsDead)
