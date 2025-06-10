@@ -48,14 +48,10 @@ public class AttackerBT : BehaviorTree.BehaviorTree
             new AttackerAI.IsStunned(this, blackboard),
 
             new SequenceNode(
-                new ProbabilitySelector(0.2f,
-                    new AttackerAI.MoveAwayFromTarget(this, blackboard),
-                    new AttackerAI.MoveToTarget(this, blackboard)
-                ),
                 new AttackerAI.CanAttack(this, blackboard),
                 new AttackerAI.IsInRange(this, blackboard, 1.5f),
-                new ProbabilitySelector(0.8f,
-                    new ProbabilitySelector(0.7f,
+                new ProbabilitySelector(0.7f,
+                    new ProbabilitySelector(0.5f,
                         new AttackerAI.AttackAction(this, blackboard),
                         new AttackerAI.KickAttackAction(this, blackboard)
                     ),
@@ -64,7 +60,12 @@ public class AttackerBT : BehaviorTree.BehaviorTree
                         new AttackerAI.DodgeRandom(this, blackboard)
                     )
                 )
-            )
+            ),
+
+            new ProbabilitySelector(0.2f,
+                    new AttackerAI.MoveAwayFromTarget(this, blackboard),
+                    new AttackerAI.MoveToTarget(this, blackboard)
+                )
         );
 
         SetRootNode(rootSelector);
